@@ -1,0 +1,26 @@
+:root {
+  --bg: #f5efe4;
+  --bg-deep: #e5dcc9;
+  --bg-accent: #c46a3c;
+  --panel: rgba(252, 248, 242, 0.8);
+  --panel-strong: rgba(255, 251, 245, 0.92);
+  --panel-dark: #1d2329;
+  --line: rgba(90, 66, 46, 0.14);
+  --line-strong: rgba(90, 66, 46, 0.24);
+  --text: #1f1812;
+  --muted: #6d6255;
+  --brand: #9d4f2e;
+  --brand-2: #2f6b66;
+  --brand-3: #d59d55;
+  --danger: #b4412d;
+  --warning: #b27b28;
+  --safe: #2d7a5d;
+  --radius-2xl: 32px;
+  --radius-xl: 24px;
+  --radius-lg: 18px;
+  --radius-md: 14px;
+  --shadow-lg: 0 28px 80px rgba(63, 39, 22, 0.12);
+  --shadow-sm: 0 16px 36px rgba(63, 39, 22, 0.08);
+  --font-main: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --font-display: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+}

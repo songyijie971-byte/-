@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>课堂视频分析报告</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+</head>
+<body class="report-body">
+  <div class="report-page">
+    <div class="report-toolbar">
+      <div class="report-toolbar-group">
+        <a class="btn subtle" href="/dashboard">返回系统总览</a>
+        <a class="btn ghost" href="/analysis-view">上传分析</a>
+        <a class="btn ghost" href="/evaluation">实验评估</a>
+      </div>
+      {% if report %}
+      <button class="btn primary" onclick="window.print()">导出为 PDF</button>
+      {% endif %}
+    </div>
+
+    {% if not report %}
+    <section class="report-panel">
+      <h1 class="report-hero-title">尚未生成分析报告</h1>
+      <p class="report-empty">请先上传课堂视频，待分析完成后再打开本页查看结构化报告。</p>
+    </section>
+    {% else %}
+    <section class="report-hero">
+      <div>
+        <div class="auth-brand">Analysis Report</div>
+        <h1 class="report-hero-title">课堂视频分析报告</h1>
+        <div class="report-subtitle">
+          本报告按“先结论、再证据、再建议”的顺序组织，可直接用于答辩展示、论文截图与系统成果说明。
+        </div>
+        <div class="auth-tip" style="margin-top: 14px;">{{ report.focus_disclaimer }}</div>
+      </div>
+      <div class="report-hero-side">
+        <div class="report-card">
+          <div class="report-label">风险等级</div>
+          <div class="report-value">
+            <span class="status-pill {{ report.risk_class|replace('pill-', '') }}">{{ report.risk_level }}</span>
+          </div>
+          <div class="report-subtitle">{{ report.risk_summary }}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">报告生成时间</div>
+          <div class="report-value sm">{{ generated_at_label }}</div>
+          <div class="report-subtitle">文件：{{ report.filename }}</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">结论先行</h2>
+      <div class="report-grid-3" style="margin-top: 14px;">
+        <div class="report-card">
+          <div class="report-label">课堂专注度评分</div>
+          <div class="report-value">{{ report.focus_score.score }}</div>
+          <div class="report-subtitle">{{ report.focus_score.summary_text }}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">风险判断</div>
+          <div class="report-value sm">{{ report.risk_level }}</div>
+          <div class="report-subtitle">{{ report.risk_summary }}</div>
+        </div>
+        <div class="report-card">
+          <div class="report-label">评分公式</div>
+          <div class="report-value sm">{{ report.focus_score.rule_text }}</div>
+          <div class="report-subtitle">{{ report.focus_score.limits_text }}</div>
+        </div>
+      </div>
+      <ul class="report-list" style="margin-top: 16px;">
+        {% for item in report.insights %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">风险触发依据</h2>
+      <div class="report-grid-5" style="margin-top: 14px;">
+        <div class="report-card"><div class="report-label">稳定告警总数</div><div class="report-value">{{ report.evidence_summary.alert_count }}</div></div>
+        <div class="report-card"><div class="report-label">主导风险行为</div><div class="report-value sm">{{ report.evidence_summary.dominant_behavior_name }}</div><div class="report-subtitle">{{ report.evidence_summary.dominant_behavior_count }} 次</div></div>
+        <div class="report-card"><div class="report-label">最长持续行为</div><div class="report-value sm">{{ report.evidence_summary.longest_behavior_name }}</div><div class="report-subtitle">{{ report.evidence_summary.longest_duration_seconds }} 秒</div></div>
+        <div class="report-card"><div class="report-label">帧覆盖率</div><div class="report-value">{{ report.evidence_summary.frame_coverage_ratio }}%</div><div class="report-subtitle">已采样 {{ report.evidence_summary.sampled_frames }} 帧</div></div>
+        <div class="report-card"><div class="report-label">分析耗时</div><div class="report-value">{{ report.evidence_summary.analysis_elapsed_seconds }}s</div><div class="report-subtitle">包含报告生成过程</div></div>
+      </div>
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">视频基本信息与处理配置</h2>
+      <div class="report-grid-4" style="margin-top: 14px;">
+        <div class="report-card"><div class="report-label">视频时长</div><div class="report-value">{{ report.duration_seconds }}s</div></div>
+        <div class="report-card"><div class="report-label">总帧数 / 已处理帧</div><div class="report-value sm">{{ report.total_frames }} / {{ report.processed_frames }}</div></div>
+        <div class="report-card"><div class="report-label">原始帧率</div><div class="report-value">{{ report.fps }}</div></div>
+        <div class="report-card"><div class="report-label">抽帧步长</div><div class="report-value">{{ report.frame_stride }}</div></div>
+      </div>
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">行为统计汇总表</h2>
+      {% if report.behavior_rows %}
+      <div class="table-wrap" style="margin-top: 14px;">
+        <table>
+          <thead>
+            <tr><th>行为类别</th><th>触发次数</th><th>平均持续时长（秒）</th><th>最长持续时长（秒）</th><th>平均人数</th><th>峰值人数</th></tr>
+          </thead>
+          <tbody>
+            {% for row in report.behavior_rows %}
+            <tr><td>{{ row.behavior_name }}</td><td>{{ row.count }}</td><td>{{ row.avg_duration }}</td><td>{{ row.max_duration }}</td><td>{{ row.avg_people }}</td><td>{{ row.max_people }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="report-empty">本次视频未形成稳定风险行为统计，说明系统在低风险课堂中也能保持完整的报告结构。</p>
+      {% endif %}
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">风险事件时间线</h2>
+      <div class="report-timeline" style="margin-top: 14px;">
+        {% if report.events %}
+        {% for item in report.events[:12] %}
+        <article class="report-timeline-card">
+          <div class="report-timeline-head">
+            <strong>{{ item.behavior_name }}</strong>
+            <span class="mini-tag">{{ item.timestamp_label }}</span>
+          </div>
+          <p class="report-subtitle">涉及人数 {{ item.count }}，持续 {{ item.duration_seconds }} 秒。</p>
+        </article>
+        {% endfor %}
+        {% else %}
+        <p class="report-empty">暂无稳定风险事件，可据此说明课堂整体秩序平稳且系统支持无异常报告输出。</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="report-panel">
+      <h2 class="panel-title">关键截图证据</h2>
+      <div class="report-gallery" style="margin-top: 14px;">
+        {% if report.gallery_items %}
+        {% for item in report.gallery_items %}
+        <article class="report-gallery-card">
+          <img class="report-gallery-image" src="{{ item.snapshot_path }}" alt="{{ item.behavior_name }}">
+          <div class="report-gallery-body">
+            <div class="report-gallery-title">{{ item.behavior_name }}</div>
+            <p class="report-subtitle">人数 {{ item.count }} · 持续 {{ item.duration_seconds }} 秒 · {{ item.timestamp_label }}</p>
+          </div>
+        </article>
+        {% endfor %}
+        {% else %}
+        <p class="report-empty">暂无关键截图，当前报告更适合展示系统在平稳课堂中的低风险判断能力。</p>
+        {% endif %}
+      </div>
+    </section>
+
+    <div class="report-grid-2">
+      <section class="report-panel">
+        <h2 class="panel-title">处理性能指标</h2>
+        <div class="report-grid-2" style="margin-top: 14px;">
+          <div class="report-card"><div class="report-label">分析耗时</div><div class="report-value">{{ report.analysis_metrics.analysis_elapsed_seconds }}s</div></div>
+          <div class="report-card"><div class="report-label">处理速度</div><div class="report-value">{{ report.analysis_metrics.processed_fps }}</div></div>
+          <div class="report-card"><div class="report-label">帧覆盖率</div><div class="report-value">{{ report.analysis_metrics.frame_coverage_ratio }}%</div></div>
+          <div class="report-card"><div class="report-label">实时比</div><div class="report-value">{{ report.analysis_metrics.realtime_ratio }}</div></div>
+        </div>
+      </section>
+
+      <section class="report-panel">
+        <h2 class="panel-title">教师建议</h2>
+        <ul class="report-list">
+          {% for item in report.teacher_suggestions %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+    </div>
+
+    <section class="report-panel">
+      <h2 class="panel-title">规则快照</h2>
+      <div class="report-subtitle" style="margin: 10px 0 12px;">规则版本：{{ report.rule_snapshot_data.version_label }}</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>行为类型</th><th>说明</th><th>连续帧阈值</th><th>告警秒数</th><th>告警状态</th></tr>
+          </thead>
+          <tbody>
+            {% for item in report.rule_snapshot_data.rules %}
+            <tr>
+              <td>{{ item.behavior_name }}</td>
+              <td>{{ item.description }}</td>
+              <td>{{ item.min_consecutive_frames }}</td>
+              <td>{{ item.alert_after_seconds if item.alert_after_seconds is not none else "关闭" }}</td>
+              <td>{{ "开启" if item.alert_enabled else "关闭" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% endif %}
+  </div>
+</body>
+</html>

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255, 251, 245, 0.94);
+      --ink: #1f1812;
+      --muted: #6d6255;
+      --brand: #9d4f2e;
+      --line: rgba(90, 66, 46, 0.14);
+      --shadow: 0 28px 80px rgba(63, 39, 22, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(47, 107, 102, 0.14), transparent 24%),
+        linear-gradient(180deg, #e5dcc9 0%, var(--bg) 100%);
+    }
+    .card {
+      width: min(720px, 100%);
+      padding: 32px;
+      border-radius: 28px;
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      box-shadow: var(--shadow);
+    }
+    .eyebrow {
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(157, 79, 46, 0.1);
+      color: var(--brand);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+    }
+    h1 {
+      margin: 16px 0 10px;
+      font-size: 38px;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.9;
+      font-size: 15px;
+    }
+    .meta {
+      margin-top: 20px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #fffdf9;
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .actions {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 18px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .btn.primary {
+      color: #fff;
+      background: linear-gradient(135deg, #9d4f2e, #b97243);
+    }
+    .btn.ghost {
+      color: var(--brand);
+      background: #fff;
+      border-color: rgba(157, 79, 46, 0.18);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="eyebrow">SYSTEM STATUS</div>
+    <h1>{{ title }}</h1>
+    <p class="lead">{{ message }}</p>
+    <div class="meta">鐘舵€佺爜锛歿{ status_code }}</div>
+    <div class="actions">
+      {% if action_href and action_label %}
+      <a class="btn primary" href="{{ action_href }}">{{ action_label }}</a>
+      {% endif %}
+      <a class="btn ghost" href="/api/health">鏌ョ湅鍋ュ悍妫€鏌?/a>
+    </div>
+  </main>
+</body>
+</html>

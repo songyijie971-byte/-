@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鐢ㄦ埛娉ㄥ唽</title>
+  <style>
+    :root {
+      --bg:
+        radial-gradient(circle at top left, rgba(197, 106, 60, 0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(47, 107, 102, 0.14), transparent 30%),
+        linear-gradient(135deg, #e5dcc9 0%, #f5efe4 100%);
+      --panel: rgba(255, 251, 245, 0.92);
+      --ink: #1f1812;
+      --muted: #6d6255;
+      --line: rgba(90, 66, 46, 0.14);
+      --brand: #9d4f2e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .card {
+      width: min(560px, 100%);
+      background: var(--panel);
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 28px 80px rgba(63, 39, 22, 0.14);
+      border: 1px solid rgba(255,255,255,.48);
+    }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    .sub {
+      margin: 12px 0 26px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .error {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff1f2;
+      color: #be123c;
+      font-size: 14px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 15px;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+    .submit {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #9d4f2e, #b97243);
+      cursor: pointer;
+    }
+    .footer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .footer a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    .tip {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(47, 107, 102, 0.08);
+      color: #2f6b66;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>鍒涘缓璐﹀彿</h1>
+    <div class="sub">娉ㄥ唽鍚庡彲涓婁紶瑙嗛銆佹煡鐪嬭嚜宸辩殑鍒嗘瀽浠诲姟涓庢姤鍛娿€傜郴缁熼粯璁ゅ凡鎻愪緵绠＄悊鍛樿处鍙凤紱濡傛灉褰撳墠鏁版嵁搴撻噷杩樻病鏈夌鐞嗗憳锛岄涓敞鍐岃处鍙蜂篃浼氳嚜鍔ㄦ垚涓虹鐞嗗憳銆?/div>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div class="field">
+        <label for="username">鐢ㄦ埛鍚?/label>
+        <input id="username" name="username" type="text" minlength="3" placeholder="璇疯緭鍏ョ敤鎴峰悕" required>
+      </div>
+      <div class="field">
+        <label for="email">閭</label>
+        <input id="email" name="email" type="email" placeholder="璇疯緭鍏ラ偖绠? required>
+      </div>
+      <div class="field">
+        <label for="password">瀵嗙爜</label>
+        <input id="password" name="password" type="password" minlength="6" placeholder="鑷冲皯 6 浣嶅瘑鐮? required>
+      </div>
+      <div class="field">
+        <label for="confirm_password">纭瀵嗙爜</label>
+        <input id="confirm_password" name="confirm_password" type="password" minlength="6" placeholder="鍐嶆杈撳叆瀵嗙爜" required>
+      </div>
+      <button class="submit" type="submit">瀹屾垚娉ㄥ唽</button>
+    </form>
+
+    <div class="tip">
+      榛樿绠＄悊鍛樿处鍙凤細<code>admin</code><br>
+      榛樿绠＄悊鍛樺瘑鐮侊細<code>admin123456</code><br>
+      浠ヤ笂璐﹀彿鏃犻渶閰嶇疆鐜鍙橀噺鍗冲彲浣跨敤銆?    </div>
+
+    <div class="footer">
+      宸叉湁璐﹀彿锛?a href="/login">杩斿洖鐧诲綍</a>
+    </div>
+  </div>
+</body>
+</html>

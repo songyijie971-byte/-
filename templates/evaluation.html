@@ -1,0 +1,212 @@
+{% extends "layout/base.html" %}
+
+{% block title %}实验评估{% endblock %}
+{% block page_title %}实验评估与论文素材{% endblock %}
+{% block page_subtitle %}统一展示识别效果、参数对比、性能指标与论文表达建议{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-hero glass-card">
+  <div class="dashboard-hero-copy">
+    <p class="hero-kicker">Thesis Lab</p>
+    <h3 class="dashboard-hero-title">实验评估与论文展示页</h3>
+    <p class="dashboard-hero-text">
+      当前页面汇集模型效果、参数取舍、系统性能、论文亮点和局限性说明，
+      目标是把“项目能运行”提升为“项目有证据、有表达、有工程完整度”。
+    </p>
+    <div class="dashboard-hero-actions">
+      <a class="btn primary" href="/dashboard">返回系统总览</a>
+      {% if current_user.role == "admin" %}
+      <a class="btn ghost" href="/admin/rules">打开规则配置</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="hero-highlight-panel">
+    <div class="hero-highlight-grid">
+      {% for item in evaluation.overview[:2] %}
+      <article class="hero-note-card">
+        <p class="hero-note-label">{{ item.label }}</p>
+        <p class="hero-note-text">{{ item.value }}</p>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="hero-insight-band">
+      <span class="hero-band-label">Model</span>
+      <p class="hero-band-text">{{ evaluation.model_name }}</p>
+      <p class="hero-band-text">{{ evaluation.dataset_note }}</p>
+    </div>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">方法说明</h3>
+      <p class="panel-subtitle">用于解释输入、采样策略、行为映射和结论边界，避免把专注度评分误读成教学质量评价。</p>
+    </div>
+  </div>
+  <div class="architecture-grid">
+    {% for item in evaluation.methodology %}
+    <article class="architecture-card">
+      <span class="mini-tag">方法 {{ loop.index }}</span>
+      <h4>{{ item.title }}</h4>
+      <p>{{ item.body }}</p>
+    </article>
+    {% endfor %}
+  </div>
+  <div class="stack-list" style="margin-top: 16px;">
+    <article class="stack-item">
+      <p class="stack-item-title">结果边界提示</p>
+      <p class="stack-item-meta">{{ evaluation.focus_disclaimer }}</p>
+    </article>
+  </div>
+</section>
+
+<div class="grid-cols-4">
+  {% for item in evaluation.effect_metrics %}
+  <article class="metric-card">
+    <p class="metric-label">{{ item.name }}</p>
+    <p class="metric-value">{{ item.f1 }}</p>
+    <p class="metric-hint">Precision {{ item.precision }} / Recall {{ item.recall }}</p>
+  </article>
+  {% endfor %}
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">识别效果指标表</h3>
+        <p class="panel-subtitle">适合直接用于论文实验章节，说明主要行为类别的识别效果。</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>行为类型</th><th>Precision</th><th>Recall</th><th>F1</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          {% for item in evaluation.effect_metrics %}
+          <tr><td>{{ item.name }}</td><td>{{ item.precision }}</td><td>{{ item.recall }}</td><td>{{ item.f1 }}</td><td>{{ item.note }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">论文亮点</h3>
+        <p class="panel-subtitle">适合作为摘要、总结或答辩开场的浓缩表达。</p>
+      </div>
+    </div>
+    <div class="stack-list">
+      {% for item in evaluation.thesis_highlights %}
+      <article class="stack-item">
+        <p class="stack-item-title">亮点 {{ loop.index }}</p>
+        <p class="stack-item-meta">{{ item }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">参数对比与设计取舍</h3>
+        <p class="panel-subtitle">重点说明“为什么最后选择这套配置”。</p>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>实验设置</th><th>优点</th><th>风险</th><th>最终决策</th></tr>
+        </thead>
+        <tbody>
+          {% for item in evaluation.parameter_comparisons %}
+          <tr><td>{{ item.setting }}</td><td>{{ item.advantage }}</td><td>{{ item.risk }}</td><td>{{ item.decision }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">系统性能指标</h3>
+        <p class="panel-subtitle">突出实时性、离线处理效率和结果输出速度。</p>
+      </div>
+    </div>
+    <div class="stack-list">
+      {% for item in evaluation.performance_metrics %}
+      <article class="stack-item">
+        <div class="stack-item-head">
+          <p class="stack-item-title">{{ item.name }}</p>
+          <span class="mini-tag">{{ item.value }}</span>
+        </div>
+        <p class="stack-item-meta">{{ item.note }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">建议演示路径</h3>
+        <p class="panel-subtitle">按固定顺序讲解，更容易把系统闭环和研究价值讲清楚。</p>
+      </div>
+    </div>
+    <div class="stack-list">
+      {% for item in evaluation.demo_flow %}
+      <article class="stack-item">
+        <p class="stack-item-title">步骤 {{ loop.index }}</p>
+        <p class="stack-item-meta">{{ item }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">系统架构与创新点</h3>
+        <p class="panel-subtitle">适合作为系统设计章节和答辩讲解的结构化素材。</p>
+      </div>
+    </div>
+    <div class="architecture-grid">
+      {% for item in evaluation.architecture_points %}
+      <article class="architecture-card">
+        <span class="mini-tag">创新点 {{ loop.index }}</span>
+        <h4>{{ item.title }}</h4>
+        <p>{{ item.body }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">局限性与后续工作</h3>
+      <p class="panel-subtitle">让整套成果表达更完整、更真实，也更符合正式研究项目的写作习惯。</p>
+    </div>
+  </div>
+  <ul class="feature-list">
+    {% for item in evaluation.limitations %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

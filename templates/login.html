@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>鐢ㄦ埛鐧诲綍</title>
+  <style>
+    :root {
+      --bg:
+        radial-gradient(circle at top left, rgba(197, 106, 60, 0.18), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(47, 107, 102, 0.16), transparent 30%),
+        linear-gradient(135deg, #e5dcc9 0%, #f5efe4 100%);
+      --panel: rgba(255, 251, 245, 0.92);
+      --ink: #1f1812;
+      --muted: #6d6255;
+      --line: rgba(90, 66, 46, 0.14);
+      --brand: #9d4f2e;
+      --brand-deep: #7e3f24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .shell {
+      width: min(980px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(360px, 420px);
+      background: var(--panel);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(63, 39, 22, 0.14);
+      border: 1px solid rgba(255,255,255,.48);
+    }
+    .hero {
+      padding: 48px;
+      background:
+        radial-gradient(circle at top right, rgba(213, 157, 85, 0.24), transparent 36%),
+        linear-gradient(160deg, #fff9f1, #f6ecdf 55%, #fbf6ef);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: 38px;
+      line-height: 1.2;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    .hero p {
+      margin: 14px 0 0;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+    .badge {
+      width: fit-content;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(157, 79, 46, 0.12);
+      color: var(--brand-deep);
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .hero-card {
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(157, 79, 46, 0.08);
+    }
+    .hero-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 15px;
+    }
+    .hero-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .form-wrap {
+      padding: 44px 36px;
+      display: flex;
+      align-items: center;
+    }
+    .form-card {
+      width: 100%;
+    }
+    .form-card h2 {
+      margin: 0;
+      font-size: 32px;
+      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+    }
+    .form-card .sub {
+      margin: 10px 0 24px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .error {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff1f2;
+      color: #be123c;
+      font-size: 14px;
+    }
+    .field {
+      margin-bottom: 16px;
+    }
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .field input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+    .submit {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #9d4f2e, #b97243);
+      cursor: pointer;
+    }
+    .actions {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+    .actions a {
+      color: var(--brand);
+      text-decoration: none;
+      font-weight: 700;
+    }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero { padding: 32px; }
+      .form-wrap { padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div>
+        <div class="badge">鏅烘収璇惧爞琛屼负璇嗗埆绯荤粺</div>
+        <h1>鐧诲綍鍚庣粺涓€绠＄悊涓婁紶浠诲姟銆佸垎鏋愭姤鍛婂拰璇惧爞琛屼负璁板綍</h1>
+        <p>绯荤粺鏀寔璐﹀彿闅旂銆佽棰戝垎鏋愩€佹姤鍛婄暀瀛樺拰瑙掕壊鏉冮檺鎺у埗銆傜鐞嗗憳涓庢暀甯堝彲浠ヨ繘鍏ュ疄鏃舵憚鍍忓ご鐩戞祴椤甸潰锛屾櫘閫氱敤鎴峰彲涓婁紶瑙嗛骞舵煡鐪嬭嚜宸辩殑鍒嗘瀽缁撴灉銆?/p>
+      </div>
+      <div class="hero-grid">
+        <div class="hero-card">
+          <strong>璐﹀彿褰掑睘娓呮櫚</strong>
+          <span>涓婁紶瑙嗛銆佸垎鏋愪换鍔°€佹姤鍛婅褰曞拰浜嬩欢鎴浘閮界粦瀹氬埌褰撳墠璐﹀彿锛屼簰涓嶄覆鏁版嵁銆?/span>
+        </div>
+        <div class="hero-card">
+          <strong>鎶ュ憡鍙鍑?/strong>
+          <span>鍒嗘瀽瀹屾垚鍚庡彲鐩存帴鏌ョ湅璇︾粏鎶ュ憡锛屽苟閫氳繃娴忚鍣ㄦ墦鍗板鍑轰负 PDF銆?/span>
+        </div>
+        <div class="hero-card">
+          <strong>鏉冮檺鏇寸渷蹇?/strong>
+          <span>榛樿绠＄悊鍛樺凡鑷姩鍒涘缓锛涘鏋滃簱閲岃繕娌℃湁绠＄悊鍛橈紝棣栦釜娉ㄥ唽璐﹀彿涔熶細鑷姩鍗囦负绠＄悊鍛樸€?/span>
+        </div>
+        <div class="hero-card">
+          <strong>闆堕厤缃彲鐧诲綍</strong>
+          <span>榛樿绠＄悊鍛樿处鍙蜂负 <code>admin</code>锛岄粯璁ゅ瘑鐮佷负 <code>admin123456</code>锛屼笉闇€瑕侀澶栭厤缃幆澧冨彉閲忋€?/span>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-wrap">
+      <div class="form-card">
+        <h2>璐﹀彿鐧诲綍</h2>
+        <div class="sub">鍙娇鐢ㄧ敤鎴峰悕鎴栭偖绠辩櫥褰曘€?/div>
+
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <div class="field">
+            <label for="account">鐢ㄦ埛鍚嶆垨閭</label>
+            <input id="account" name="account" type="text" placeholder="璇疯緭鍏ョ敤鎴峰悕鎴栭偖绠? required>
+          </div>
+          <div class="field">
+            <label for="password">瀵嗙爜</label>
+            <input id="password" name="password" type="password" placeholder="璇疯緭鍏ュ瘑鐮? required>
+          </div>
+          <button class="submit" type="submit">鐧诲綍绯荤粺</button>
+        </form>
+
+        <div class="actions">
+          杩樻病鏈夎处鍙凤紵<a href="/register">绔嬪嵆娉ㄥ唽</a><br>
+          榛樿绠＄悊鍛樺彲鐩存帴浣跨敤 <code>admin / admin123456</code> 鐧诲綍銆?br>
+          濡傛灉褰撳墠搴撻噷杩樻病鏈夌鐞嗗憳锛岄涓柊娉ㄥ唽璐﹀彿涔熶細鑷姩鎴愪负绠＄悊鍛樸€?        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

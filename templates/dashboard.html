@@ -1,0 +1,26 @@
+{% extends "layout/base.html" %}
+
+{% block title %}系统总览{% endblock %}
+{% block page_title %}系统总览{% endblock %}
+{% block page_subtitle %}开局展示与模块入口：一屏直达实时监测、离线分析与报告结果{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="dashboard-stage glass-card">
+  <div class="dashboard-stage-copy">
+    <h3 class="dashboard-stage-title">
+      <span class="dashboard-stage-title-main">智慧课堂行为分析系统</span>
+      <span class="dashboard-stage-title-sub">开局展示</span>
+    </h3>
+    <p class="dashboard-stage-text">直接选择要展示的模块入口：实时监测、离线分析、或最新报告。</p>
+    <div class="dashboard-hero-actions">
+      <a class="btn primary" href="/monitor">进入实时监测</a>
+      <a class="btn ghost" href="/analysis-view">上传视频分析</a>
+      <a class="btn ghost" href="/report/latest" target="_blank">打开最新报告</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

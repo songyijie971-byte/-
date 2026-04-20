@@ -1,0 +1,168 @@
+{% extends "layout/base.html" %}
+
+{% block title %}瀹炴椂鐩戞祴{% endblock %}
+{% block page_title %}瀹炴椂鐩戞祴{% endblock %}
+{% block page_subtitle %}鎶婂疄鏃剁敾闈€侀闄╃瓑绾у拰瑙勫垯鍛戒腑鏀惧埌鍚屼竴鏉¤绾夸笂{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/monitor.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="monitor-stage glass-card">
+  <div class="monitor-stage-copy">
+    <p class="page-hero-kicker">LIVE OBSERVATION LAYER</p>
+    <h3 class="monitor-stage-title">绯荤粺姝ｅ湪鎰熺煡璇惧爞锛屼笉鍙槸鎾斁鎽勫儚澶淬€?/h3>
+    <p class="page-hero-text">杩欎竴椤靛己璋冣€滃疄鏃舵劅鈥濆拰鈥滆В閲婂姏鈥濄€傚乏杈规槸褰撳墠璇惧爞鐢婚潰锛屽彸杈瑰悓姝ョ粰鍑洪闄╁垽鏂€佹潵婧愮姸鎬佸拰瑙勫垯鎽樿銆?/p>
+    <div class="monitor-stage-actions">
+      <button id="switchCameraButton" class="btn primary" type="button">鍒囧洖鎽勫儚澶?/button>
+      <a class="btn ghost" href="/analysis-view">鍓嶅線绂荤嚎鍒嗘瀽</a>
+      <a class="btn ghost" href="/report/latest" target="_blank">鎵撳紑鏈€鏂版姤鍛?/a>
+    </div>
+  </div>
+  <div class="monitor-stage-aside">
+    <article class="hero-stat-card">
+      <p class="hero-stat-label">褰撳墠鏉ユ簮</p>
+      <p id="heroSourceLabel" class="hero-stat-value">瀹炴椂鎽勫儚澶?/p>
+      <p class="hero-stat-hint">褰撳墠杈撳叆婧愪細涓庝笅鏂硅棰戞祦鍜岀姸鎬佺粺璁′繚鎸佸悓姝ャ€?/p>
+    </article>
+    <article class="hero-stat-card hero-stat-card-accent">
+      <p class="hero-stat-label">Focus Signal</p>
+      <p id="heroFocusValue" class="hero-stat-value">楂?/p>
+      <p id="heroFocusHint" class="hero-stat-hint">姝ｅ湪鍔犺浇璇惧爞鐘舵€佹憳瑕併€?/p>
+    </article>
+  </div>
+</section>
+
+<div id="monitorStatusBar" class="alert-strip hidden"></div>
+{% set id = "monitorAlert" %}
+{% include "components/alert_strip.html" %}
+
+<section class="monitor-command-grid">
+  <section class="glass-card live-screen-card">
+    <div class="panel-head">
+      <h3 class="panel-title">瀹炴椂璇惧爞鐢婚潰</h3>
+      <p class="panel-subtitle">褰撳墠杈撳叆婧愶細<span id="sourceLabel">瀹炴椂鎽勫儚澶?/span></p>
+    </div>
+    <div class="live-screen-frame">
+      <div class="live-screen-scan"></div>
+      <div class="live-screen-corners">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <img id="videoFeed" class="video-frame video-frame-tall" src="/video_feed" alt="live feed">
+    </div>
+    <div class="live-screen-footer">
+      <p id="cameraStatusText" class="panel-subtitle">绯荤粺浼氬湪鎽勫儚澶村紓甯告椂鑷姩鍒囨崲涓哄崰浣嶇敾闈€?/p>
+      <div class="monitor-signal-tags">
+        <span id="focusLiveBadge" class="mini-tag">璇惧爞鐘舵€佺ǔ瀹?/span>
+        <span id="alertCountBadge" class="mini-tag subtle-tag">鍛婅 0</span>
+      </div>
+    </div>
+    <div class="live-legend">
+      <span>鐢婚潰灞傦細璇惧爞婧愯棰?/span>
+      <span>鍒ゆ柇灞傦細瑙勫垯涓庢椂搴忕姸鎬?/span>
+      <span>璇佹嵁灞傦細蹇収涓庡憡璀︽椂闂寸嚎</span>
+    </div>
+  </section>
+
+  <section class="glass-card live-insight-rail">
+    <div class="rail-section">
+      <h3 class="panel-title">璇惧爞鐘舵€佹瑙?/h3>
+      <div class="grid-cols-2 compact">
+        <article class="metric-card emphasis-card">
+          <p class="metric-label">璇惧爞涓撴敞搴﹁瘎鍒?/p>
+          <p class="metric-value" id="focusScore">0</p>
+          <p class="metric-hint" id="focusSummary">--</p>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">椋庨櫓绛夌骇</p>
+          <p class="metric-value"><span id="focusLevel" class="status-pill high">楂?/span></p>
+          <p class="metric-hint" id="lastUpdated">--</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="rail-section signal-rules">
+      <div class="quick-points quick-points-single">
+        <article class="quick-point">
+          <span>瑙勫垯鍏紡</span>
+          <strong id="focusRuleText">--</strong>
+        </article>
+        <article class="quick-point">
+          <span>璇勫垎璇存槑</span>
+          <strong id="focusLimitText">--</strong>
+        </article>
+      </div>
+    </div>
+
+    <div class="rail-section perception-wall">
+      <h3 class="panel-title">绯荤粺姝ｅ湪鎰熺煡浠€涔?/h3>
+      <div class="perception-grid">
+        <article class="perception-card">
+          <span>浣庡ご浜烘暟</span>
+          <strong id="statLowHead">0</strong>
+          <small id="durationLowHead">0.0s</small>
+        </article>
+        <article class="perception-card">
+          <span>鐫¤浜烘暟</span>
+          <strong id="statSleep">0</strong>
+          <small id="durationSleep">0.0s</small>
+        </article>
+        <article class="perception-card">
+          <span>涓炬墜浜烘暟</span>
+          <strong id="statHandRaise">0</strong>
+          <small id="durationHandRaise">0.0s</small>
+        </article>
+        <article class="perception-card">
+          <span>杞ご浜よ皥</span>
+          <strong id="statTurnTalk">0</strong>
+          <small id="durationTurnTalk">0.0s</small>
+        </article>
+      </div>
+      <div class="perception-footer">
+        <span>杩欑粍鏁板瓧鐢ㄤ簬瑙ｉ噴绯荤粺涓嶆槸鈥滃彧浼氱敾妗嗏€濓紝鑰屾槸鍦ㄦ寔缁劅鐭ヨ鍫傚姩鎬併€?/span>
+      </div>
+    </div>
+  </section>
+</section>
+
+<div class="grid-main monitor-bottom-grid">
+  <section class="glass-card insight-panel insight-panel-warm">
+    <div class="section-head"><div><h3 class="panel-title">寮傚父琛屼负鎺掕</h3><p class="panel-subtitle">鎸夎繎鏈熷憡璀﹂娆℃眹鎬伙紝蹇€熸寚鍑鸿鍫備富瑕侀闄╂潵婧愩€?/p></div></div>
+    <div class="panel-chip-row">
+      <span class="panel-chip">棰戞浠ｈ〃涓昏椋庨櫓婧?/span>
+      <span class="panel-chip">閫傚悎閰嶅悎瀹炴椂鐢婚潰璇存槑</span>
+    </div>
+    <div id="behaviorRanking" class="stack-list"><p class="empty-text">鏆傛棤鎺掕鏁版嵁</p></div>
+  </section>
+  <section class="glass-card insight-panel insight-panel-cool">
+    <div class="section-head"><div><h3 class="panel-title">鏈€杩戝憡璀︽椂闂寸嚎</h3><p class="panel-subtitle">缁撳悎鏃堕棿銆佹寔缁椂闀垮拰娑夊強浜烘暟锛岀獊鍑轰簨浠惰В閲婂姏銆?/p></div></div>
+    <div class="panel-chip-row">
+      <span class="panel-chip">鎸佺画鏃堕暱浣撶幇浜嬩欢寮哄害</span>
+      <span class="panel-chip">浜烘暟浣撶幇褰卞搷鑼冨洿</span>
+    </div>
+    <div id="recentAlertsTimeline" class="stack-list"><p class="empty-text">鏆傛棤浜嬩欢</p></div>
+  </section>
+</div>
+
+<div class="grid-main monitor-bottom-grid">
+  <section class="glass-card">
+    <div class="section-head"><div><h3 class="panel-title">杩戜竴鍒嗛挓瓒嬪娍</h3><p class="panel-subtitle">灞曠ず鏈€杩戜竴娈垫椂闂村唴鐨勯闄╂尝鍔ㄥ揩鐓с€?/p></div></div>
+    <div id="trendChart" class="trend-bars"><p class="empty-text">鏆傛棤瓒嬪娍鏁版嵁</p></div>
+  </section>
+  <section class="glass-card">
+    <div class="section-head"><div><h3 class="panel-title">褰撳墠瑙勫垯鎽樿</h3><p class="panel-subtitle">寮鸿皟绯荤粺鍏峰鍙鐞嗐€佸彲閰嶇疆銆佸彲鎵╁睍鐨勫伐绋嬭兘鍔涖€?/p></div></div>
+    <div id="ruleSummary" class="stack-list"><p class="empty-text">姝ｅ湪鍔犺浇瑙勫垯鎽樿</p></div>
+  </section>
+</div>
+
+{% set title = "鏈€鏂板憡璀︽埅鍥? %}
+{% set empty_id = "snapshotEmpty" %}
+{% set image_id = "snapshotImage" %}
+{% set meta_id = "snapshotMeta" %}
+{% include "components/snapshot_card.html" %}
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/monitor.js') }}"></script>
+{% endblock %}

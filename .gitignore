@@ -1,0 +1,28 @@
+.venv/
+.idea/
+__pycache__/
+*.py[cod]
+
+# Local caches
+.npm-cache/
+.pytest_cache/
+
+# Runtime artifacts / uploads / snapshots / queues
+data/uploads/
+data/alerts/
+data/job_queue/
+data/runtime/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Large assets (keep via download or Git LFS if needed)
+*.onnx
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+

@@ -1,0 +1,18 @@
+<nav class="side-nav">
+  {% if can_access_camera %}
+  <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/dashboard">
+    <span>绯荤粺鎬昏</span>
+  </a>
+  <a class="nav-link {% if active_page == 'monitor' %}active{% endif %}" href="/monitor">
+    <span>瀹炴椂鐩戞祴</span>
+  </a>
+  {% endif %}
+  <a class="nav-link {% if active_page == 'analysis' %}active{% endif %}" href="/analysis-view">
+    <span>绂荤嚎鍒嗘瀽</span>
+  </a>
+  {% if current_user.role == "admin" %}
+  <a class="nav-link" href="/admin/rules">
+    <span>瑙勫垯閰嶇疆</span>
+  </a>
+  {% endif %}
+</nav>

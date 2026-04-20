@@ -1,0 +1,7 @@
+<article class="metric-card {{ extra_class|default('') }}">
+  <p class="metric-label">{{ label }}</p>
+  <p class="metric-value" {% if value_id %}id="{{ value_id }}"{% endif %}>{{ value|default('--') }}</p>
+  {% if hint %}
+  <p class="metric-hint" {% if hint_id %}id="{{ hint_id }}"{% endif %}>{{ hint }}</p>
+  {% endif %}
+</article>

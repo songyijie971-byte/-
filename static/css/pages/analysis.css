@@ -1,0 +1,221 @@
+.analysis-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.9fr);
+  gap: 20px;
+  padding: 26px;
+  background:
+    radial-gradient(circle at top left, rgba(47, 107, 102, 0.14), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(213, 157, 85, 0.22), transparent 28%),
+    linear-gradient(135deg, rgba(255, 249, 241, 0.97), rgba(246, 236, 223, 0.88));
+}
+
+.analysis-stage-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+.analysis-stage-title {
+  margin: 0;
+  max-width: 11ch;
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.4vw, 42px);
+  line-height: 1.05;
+}
+
+.analysis-stage-side {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.page-hero-kicker {
+  margin: 0;
+  color: var(--brand);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.page-hero-text {
+  margin: 0;
+  max-width: 58ch;
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 14px;
+}
+
+.hero-stat-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.92), rgba(245, 237, 226, 0.84));
+  border: 1px solid rgba(157, 79, 46, 0.12);
+  min-height: 162px;
+}
+
+.hero-stat-card-accent {
+  background: linear-gradient(180deg, rgba(31, 24, 18, 0.95), rgba(45, 34, 25, 0.92));
+  color: #fff4e7;
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+.hero-stat-card-accent .hero-stat-label,
+.hero-stat-card-accent .hero-stat-hint {
+  color: rgba(255, 235, 214, 0.68);
+}
+
+.hero-stat-label {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+}
+
+.hero-stat-value {
+  margin: 14px 0 10px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.05;
+}
+
+.hero-stat-hint {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 12px;
+}
+
+.analysis-flow-ribbon {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.72);
+  border: 1px solid rgba(157, 79, 46, 0.12);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.analysis-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 16px;
+}
+
+.upload-command-card {
+  background:
+    radial-gradient(circle at top right, rgba(47, 107, 102, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 252, 248, 0.97), rgba(245, 237, 226, 0.88));
+}
+
+.current-job-card {
+  min-height: 100%;
+}
+
+.pipeline-console {
+  margin-top: 16px;
+}
+
+.console-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.console-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.76);
+  border: 1px solid rgba(157, 79, 46, 0.12);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.progress-command {
+  margin-top: 14px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(157, 79, 46, 0.08);
+  min-height: 132px;
+}
+
+.progress-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stage-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  position: relative;
+}
+
+.stage-board::before {
+  content: "";
+  position: absolute;
+  top: 24px;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(157, 79, 46, 0.18), rgba(47, 107, 102, 0.26), rgba(157, 79, 46, 0.18));
+  z-index: 0;
+}
+
+.stage-board .stage-card {
+  position: relative;
+  z-index: 1;
+  min-height: 188px;
+}
+
+@media (max-width: 1180px) {
+  .analysis-stage,
+  .analysis-workbench,
+  .stage-board {
+    grid-template-columns: 1fr;
+  }
+
+  .stage-board::before {
+    display: none;
+  }
+
+  .analysis-stage-title {
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .analysis-stage {
+    padding: 20px 18px;
+  }
+
+  .analysis-stage-side {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-stat-card,
+  .progress-command,
+  .stage-board .stage-card {
+    min-height: auto;
+  }
+}

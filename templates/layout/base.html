@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}鏅烘収璇惧爞琛屼负鍒嗘瀽绯荤粺{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+  {% block page_css %}{% endblock %}
+</head>
+<body class="dashboard-body">
+  <div class="bg-orb bg-orb-left"></div>
+  <div class="bg-orb bg-orb-right"></div>
+  <div class="app-shell">
+    <aside class="app-sidebar">
+      <div class="brand-panel">
+        <p class="brand-eyebrow">SMART CLASSROOM</p>
+        <h1 class="brand-title">璇惧爞琛屼负鍒嗘瀽涓灑</h1>
+        <p class="brand-subtitle">瀹炴椂鐩戞祴 / 涓婁紶鍒嗘瀽 / 鑷姩鎶ュ憡 / 瀹為獙璇勪及</p>
+      </div>
+      {% include "layout/nav.html" %}
+      <div class="sidebar-footer">
+        <div class="account-switcher" data-account-switcher>
+          <button class="account-trigger" type="button" data-account-trigger aria-expanded="false" aria-haspopup="true">
+            <span class="account-trigger-avatar">{{ current_user.username[:1]|upper }}</span>
+            <span class="account-trigger-copy">
+              <strong>{{ current_user.username }}</strong>
+              <small>褰撳墠璐﹀彿</small>
+            </span>
+            <span class="account-trigger-caret">v</span>
+          </button>
+
+          <div class="account-menu hidden" data-account-menu>
+            <div class="account-menu-header">
+              <span class="account-menu-avatar">{{ current_user.username[:1]|upper }}</span>
+              <div class="account-menu-copy">
+                <strong>{{ current_user.username }}</strong>
+                <span>{{ current_user.email }}</span>
+                <small>瑙掕壊锛歿{ current_user.role }}</small>
+              </div>
+            </div>
+
+            <div class="account-menu-links">
+              <a class="account-menu-link" href="/analysis-view">
+                <span class="account-menu-icon">01</span>
+                <span>鎴戠殑涓婁紶</span>
+              </a>
+              <a class="account-menu-link" href="/account">
+                <span class="account-menu-icon">02</span>
+                <span>璐﹀彿淇℃伅</span>
+              </a>
+              <a class="account-menu-link" href="/change-password">
+                <span class="account-menu-icon">03</span>
+                <span>淇敼瀵嗙爜</span>
+              </a>
+              <a class="account-menu-link" href="/switch-account">
+                <span class="account-menu-icon">04</span>
+                <span>鍒囨崲璐﹀彿</span>
+              </a>
+              <a class="account-menu-link danger" href="/logout">
+                <span class="account-menu-icon">05</span>
+                <span>閫€鍑虹櫥褰?/span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="app-main">
+      <header class="topbar">
+        <div>
+          <h2 class="page-title">{% block page_title %}璇惧爞鎬昏{% endblock %}</h2>
+          <p class="page-subtitle">{% block page_subtitle %}姣曚笟璁捐灞曠ず妯″紡{% endblock %}</p>
+        </div>
+        <div class="topbar-actions">
+          <a class="btn ghost" href="/report/latest" target="_blank">鏈€鏂版姤鍛?/a>
+          {% if current_user.role == "admin" %}
+          <a class="btn ghost" href="/admin/rules">瑙勫垯閰嶇疆</a>
+          {% endif %}
+          <a class="btn ghost" href="/analysis-view">涓婁紶鍒嗘瀽</a>
+        </div>
+      </header>
+
+      <section class="page-content">
+        {% block content %}{% endblock %}
+      </section>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/state.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/account_menu.js') }}"></script>
+  {% block page_scripts %}{% endblock %}
+</body>
+</html>

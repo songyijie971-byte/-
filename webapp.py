@@ -147,49 +147,6 @@ APP_CONTEXT = create_app_context(
 app.extensions["classroom_demo.context"] = APP_CONTEXT
 
 
-def get_model():
-    if APP_CONTEXT.model is not None:
-        return APP_CONTEXT.model
-
-    if not os.path.exists(RUNTIME_CONFIG.model_path):
-        with APP_CONTEXT.runtime_lock: APP_CONTEXT.runtime_refs["model_state"].update(
-            {
-                "status": "error",
-                "loaded": False,
-                "message": "未找到模型文件，请检查 YOLO_MODEL_PATH 配置。",
-                "last_error": "missing_model_file",
-            }
-        )
-        raise FileNotFoundError(
-            "未找到模型文件，请检查 YOLO_MODEL_PATH 配置: {}".format(
-                RUNTIME_CONFIG.model_path
-            )
-        )
-
-    try:
-        APP_CONTEXT.model = YOLO(RUNTIME_CONFIG.model_path, task="detect")
-        with APP_CONTEXT.runtime_lock: APP_CONTEXT.runtime_refs["model_state"].update(
-            {
-                "status": "ok",
-                "loaded": True,
-                "device": inference_device_label(),
-                "message": "模型已加载，可用于实时监测与视频分析。",
-                "last_error": None,
-            }
-        )
-        return APP_CONTEXT.model
-    except Exception as exc:
-        with APP_CONTEXT.runtime_lock: APP_CONTEXT.runtime_refs["model_state"].update(
-            {
-                "status": "error",
-                "loaded": False,
-                "message": "模型加载失败，请检查文件格式与推理环境。",
-                "last_error": str(exc),
-            }
-        )
-        raise
-
-
 def _json_dumps(payload) -> str:
     return json.dumps(payload, ensure_ascii=False)
 
@@ -518,7 +475,12 @@ DEPENDENCIES = build_service_registry(
         "_json_loads": _json_loads,
     },
 )
+app.extensions["classroom_demo.dependencies"] = DEPENDENCIES
 DEPENDENCIES["reset_runtime_stats"]()
+
+
+def create_app():
+    return app
 
 # Compatibility exports used by tests and legacy integration code.
 engine = APP_CONTEXT.engine

@@ -2,6 +2,7 @@
   const F = window.ClassroomFormatters;
   const API = window.ClassroomAPI;
   const State = window.ClassroomState;
+  const H = window.ClassroomDOM;
 
   function setText(id, value) {
     const el = document.getElementById(id);
@@ -47,7 +48,7 @@
       return;
     }
     box.innerHTML = items.map(function (item) {
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">' + item.count + ' 次</span></div><p class="stack-item-meta">当前窗口内出现频次较高，可优先关注该行为。</p></article>';
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + H.escapeHtml(item.behavior_name || "--") + '</p><span class="mini-tag">' + H.escapeHtml(item.count || 0) + ' 次</span></div><p class="stack-item-meta">当前窗口内出现频次较高，可优先关注该行为。</p></article>';
     }).join("");
   }
 
@@ -59,7 +60,7 @@
       return;
     }
     box.innerHTML = items.map(function (item) {
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="trend-label">' + F.formatTime(item.timestamp) + '</span></div><p class="stack-item-meta">持续 ' + F.formatSeconds(item.duration_seconds) + ' · 人数 ' + item.count + "</p></article>";
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + H.escapeHtml(item.behavior_name || "--") + '</p><span class="trend-label">' + H.escapeHtml(F.formatTime(item.timestamp)) + '</span></div><p class="stack-item-meta">持续 ' + H.escapeHtml(F.formatSeconds(item.duration_seconds)) + ' · 人数 ' + H.escapeHtml(item.count || 0) + "</p></article>";
     }).join("");
   }
 
@@ -71,8 +72,8 @@
       return;
     }
     box.innerHTML = items.map(function (item) {
-      const barHeight = Math.max(16, item.bar_value || 20);
-      return '<div class="trend-col"><div class="trend-bar" style="height:' + barHeight + '%"></div><div class="trend-label">' + item.behavior_name + '<br>' + (item.time_label || "--") + "</div></div>";
+      const barHeight = Math.max(16, Math.min(100, Number(item.bar_value || 20)));
+      return '<div class="trend-col"><div class="trend-bar" style="height:' + barHeight + '%"></div><div class="trend-label">' + H.escapeHtml(item.behavior_name || "--") + '<br>' + H.escapeHtml(item.time_label || "--") + "</div></div>";
     }).join("");
   }
 
@@ -86,7 +87,7 @@
     }
     box.innerHTML = items.map(function (item) {
       const threshold = item.alert_enabled ? (item.alert_after_seconds + " 秒") : "未启用告警";
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">连续 ' + item.min_consecutive_frames + ' 帧</span></div><p class="stack-item-meta">' + item.description + " · 阈值 " + threshold + "</p></article>";
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + H.escapeHtml(item.behavior_name || "--") + '</p><span class="mini-tag">连续 ' + H.escapeHtml(item.min_consecutive_frames || 0) + ' 帧</span></div><p class="stack-item-meta">' + H.escapeHtml(item.description || "") + " · 阈值 " + H.escapeHtml(threshold) + "</p></article>";
     }).join("");
   }
 

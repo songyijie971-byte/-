@@ -450,7 +450,7 @@ class UploadAnalysisApplicationService:
                 fps=round(fps, 2),
                 frame_stride=self.video_analysis_frame_stride(),
                 duration_seconds=round(duration_seconds, 1),
-                status_detail="瑙嗛宸叉墦寮€锛屾鍦ㄥ姞杞藉垎鏋愭ā鍨嬨€?",
+                status_detail="视频已打开，正在加载分析模型。",
             )
 
             frame_index = 0
@@ -521,7 +521,7 @@ class UploadAnalysisApplicationService:
                     progress=progress,
                     duration_seconds=round(duration_seconds, 1),
                     fps=round(fps, 2),
-                    status_detail="姝ｅ湪鍒嗘瀽瑙嗛甯у苟姹囨€昏鍫傝涓轰簨浠躲€?",
+                    status_detail="正在分析视频帧，并汇总课堂行为事件。",
                 )
                 last_progress_persisted = progress
                 last_progress_persisted_at = now_perf
@@ -533,7 +533,7 @@ class UploadAnalysisApplicationService:
 
             current_stage = "report_generation"
             self.runtime.logger.info("Upload analysis job=%s stage=%s", job_id, current_stage)
-            self.update_job_record(job_id, status_detail="鍒嗘瀽瀹屾垚锛屾鍦ㄧ敓鎴愬垎鏋愭姤鍛娿€?")
+            self.update_job_record(job_id, status_detail="分析已完成，正在生成分析报告。")
             report_events = self.runtime.event_storage.list_events(
                 limit=500,
                 user_id=user_id,
@@ -617,7 +617,7 @@ class UploadAnalysisApplicationService:
                 duration_seconds=round(duration_seconds, 1),
                 fps=round(fps, 2),
                 report_ready=True,
-                status_detail="鍒嗘瀽瀹屾垚锛屾姤鍛婂凡鐢熸垚锛屽彲鐩存帴鎵撳紑鍒嗘瀽鎶ュ憡銆?",
+                status_detail="分析已完成，报告已生成，可直接打开分析报告。",
                 finished_at=datetime.utcnow(),
                 failure_stage=None,
                 error_code=None,
@@ -637,11 +637,11 @@ class UploadAnalysisApplicationService:
         except Exception as exc:
             self.runtime.logger.exception("Failed to process uploaded video job=%s", job_id)
             stage_message_map = {
-                "prepare": "????????????????",
-                "open_video": "???????????????????????",
-                "load_model": "????????????????????",
-                "frame_inference": "??????????????????",
-                "report_generation": "?????????????????",
+                "prepare": "任务准备失败，请重新上传视频。",
+                "open_video": "视频读取失败，请确认文件完整且格式受支持。",
+                "load_model": "模型加载失败，请检查模型文件与推理环境。",
+                "frame_inference": "抽帧分析失败，请重试或换用更短的视频。",
+                "report_generation": "报告生成失败，分析结果未能完整保存。",
             }
             error_code = "analysis_failed"
             if isinstance(exc, UploadAnalysisValidationError):
@@ -657,7 +657,7 @@ class UploadAnalysisApplicationService:
                 error_message=str(exc),
                 status_detail=stage_message_map.get(
                     current_stage,
-                    "浠诲姟鎵ц澶辫触锛岃閲嶆柊涓婁紶瑙嗛銆?",
+                    "任务执行失败，请重新上传视频。",
                 ),
             )
             elapsed = time.perf_counter() - processing_started_at
@@ -680,7 +680,7 @@ class UploadAnalysisApplicationService:
             payload = self.report_builders.serialize_job(job)
             payload["message"] = self.report_builders.job_status_message(job)
             payload["source_mode"] = "upload"
-            payload["source_label"] = "????"
+            payload["source_label"] = "上传分析"
             return payload
 
     def build_history_response_for_user(self, user) -> Dict[str, object]:
@@ -813,7 +813,7 @@ class UploadAnalysisApplicationService:
                 "rule_text": focus.get("rule_text", "--"),
                 "limits_text": focus.get("limits_text", "--"),
             },
-            "focus_disclaimer": "???????????????????????????????",
+            "focus_disclaimer": "专注度评分仅用于课堂状态可视化展示，不直接等同于教学质量评价。",
             "rule_summary": {
                 "version_label": rule_payload.get("version_label", "--"),
                 "items": rule_payload.get("items", [])[:4],

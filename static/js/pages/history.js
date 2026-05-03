@@ -2,6 +2,7 @@
   const F = window.ClassroomFormatters;
   const API = window.ClassroomAPI;
   const State = window.ClassroomState;
+  const H = window.ClassroomDOM;
 
   function setText(id, value) {
     const el = document.getElementById(id);
@@ -44,10 +45,10 @@
           '<article class="stack-item">' +
           '<div class="stack-item-head">' +
           '<p class="stack-item-title">' +
-          item.behavior_name +
+          H.escapeHtml(item.behavior_name || "--") +
           "</p>" +
           '<span class="trend-label">' +
-          item.count +
+          H.escapeHtml(item.count || 0) +
           " 次</span>" +
           "</div>" +
           "</article>"
@@ -69,16 +70,16 @@
           '<article class="stack-item">' +
           '<div class="stack-item-head">' +
           '<p class="stack-item-title">' +
-          item.behavior_name +
+          H.escapeHtml(item.behavior_name || "--") +
           "</p>" +
           '<span class="trend-label">' +
-          F.formatTime(item.timestamp) +
+          H.escapeHtml(F.formatTime(item.timestamp)) +
           "</span>" +
           "</div>" +
           '<p class="stack-item-meta">持续 ' +
-          F.formatSeconds(item.duration_seconds) +
+          H.escapeHtml(F.formatSeconds(item.duration_seconds)) +
           " · 人数 " +
-          item.count +
+          H.escapeHtml(item.count || 0) +
           "</p>" +
           "</article>"
         );
@@ -95,16 +96,16 @@
     }
     box.innerHTML = items
       .map(function (item) {
-        const barHeight = Math.max(20, item.bar_value || 20);
+        const barHeight = Math.max(20, Math.min(100, Number(item.bar_value || 20)));
         return (
           '<div class="trend-col">' +
           '<div class="trend-bar" style="height:' +
           barHeight +
           '%"></div>' +
           '<div class="trend-label">' +
-          item.behavior_name +
+          H.escapeHtml(item.behavior_name || "--") +
           "<br>" +
-          (item.time_label || "--") +
+          H.escapeHtml(item.time_label || "--") +
           "</div>" +
           "</div>"
         );

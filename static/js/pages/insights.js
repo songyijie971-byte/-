@@ -1,14 +1,10 @@
 (function () {
   const API = window.ClassroomAPI;
   const F = window.ClassroomFormatters;
+  const H = window.ClassroomDOM;
 
   function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    return H.escapeHtml(value);
   }
 
   function setText(id, value) {
@@ -24,7 +20,7 @@
       return;
     }
     box.innerHTML = items.map(function (item) {
-      const barHeight = Math.max(20, Number(item.bar_value || 20));
+      const barHeight = Math.max(20, Math.min(100, Number(item.bar_value || 20)));
       return ''
         + '<div class="trend-col">'
         + '<div class="trend-bar" style="height:' + barHeight + '%"></div>'

@@ -1,11 +1,8 @@
 (function () {
+  const H = window.ClassroomDOM;
+
   function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    return H.escapeHtml(value);
   }
 
   function setText(id, value) {
@@ -33,7 +30,7 @@
       + '<p class="showcase-mini">' + escapeHtml(statusLabel(status)) + '</p>'
       + '<h4>' + escapeHtml(title) + '</h4>'
       + '<p>' + escapeHtml(message) + '</p>'
-      + (extra.length ? '<p style="margin-top:8px;">' + escapeHtml(extra.join(" · ")) + '</p>' : '')
+      + (extra.length ? '<p class="health-item-extra">' + escapeHtml(extra.join(" · ")) + '</p>' : '')
       + '</article>';
   }
 

@@ -10,7 +10,7 @@
 
 {% block content %}
 {% if request.args.get("notice") == "no_camera_permission" %}
-<div class="alert-strip warning" style="margin-bottom:12px;">
+<div class="alert-strip warning analysis-notice">
   当前账户没有实时摄像头访问权限，因此已为你保留离线视频分析入口。如果需要开启实时监测，请使用 admin 或 teacher 账户登录，或检查环境变量 `ALLOW_USER_CAMERA=1`。
 </div>
 {% endif %}

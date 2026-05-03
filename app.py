@@ -1,4 +1,7 @@
-from webapp import LOGGER, app, build_database_url
+from webapp import LOGGER, build_database_url, create_app
+
+
+app = create_app()
 
 
 if __name__ == "__main__":

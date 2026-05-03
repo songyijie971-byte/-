@@ -6,108 +6,7 @@
   <title>课堂视频分析报告</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-  <style>
-    body {
-      margin: 0;
-      padding: 24px;
-      background: #f4efe8;
-      color: #2b2117;
-      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
-    }
-
-    .report-shell {
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .report-toolbar {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-
-    .report-toolbar-group {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .report-section {
-      margin-bottom: 20px;
-      padding: 20px;
-      background: rgba(255, 255, 255, 0.82);
-      border: 1px solid rgba(157, 79, 46, 0.12);
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(63, 39, 22, 0.08);
-    }
-
-    .report-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
-    }
-
-    .report-image-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 16px;
-    }
-
-    .report-image-card {
-      overflow: hidden;
-      border-radius: 16px;
-      background: #fff;
-      border: 1px solid rgba(157, 79, 46, 0.12);
-    }
-
-    .report-image-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      display: block;
-    }
-
-    .report-image-card div {
-      padding: 12px 14px 14px;
-    }
-
-    .report-title {
-      margin: 0 0 8px;
-      font-size: 32px;
-      line-height: 1.2;
-    }
-
-    .report-subtitle {
-      margin: 0;
-      color: #6f6254;
-      line-height: 1.7;
-    }
-
-    .report-list {
-      margin: 14px 0 0;
-      padding-left: 20px;
-      line-height: 1.8;
-    }
-
-    @media print {
-      body {
-        padding: 0;
-        background: #fff;
-      }
-
-      .report-toolbar {
-        display: none;
-      }
-
-      .report-section {
-        box-shadow: none;
-        border: 1px solid #ddd;
-        break-inside: avoid;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/report.css') }}">
 </head>
 <body>
   <div class="report-shell">
@@ -131,7 +30,7 @@
     <section class="report-section">
       <h1 class="report-title">课堂视频分析报告</h1>
       <p class="report-subtitle">{{ report.focus_disclaimer }}</p>
-      <div class="report-grid" style="margin-top: 16px;">
+      <div class="report-grid report-spaced">
         <article class="metric-card">
           <p class="metric-label">风险等级</p>
           <p class="metric-value">{{ report.risk_level }}</p>
@@ -144,12 +43,12 @@
         </article>
         <article class="metric-card">
           <p class="metric-label">报告时间</p>
-          <p class="metric-value" style="font-size: 22px;">{{ generated_at_label }}</p>
+          <p class="metric-value report-metric-sm">{{ generated_at_label }}</p>
           <p class="metric-hint">文件：{{ report.filename }}</p>
         </article>
         <article class="metric-card">
           <p class="metric-label">评分说明</p>
-          <p class="metric-value" style="font-size: 18px; line-height: 1.5;">{{ report.focus_score.rule_text }}</p>
+          <p class="metric-value report-metric-xs">{{ report.focus_score.rule_text }}</p>
           <p class="metric-hint">{{ report.focus_score.limits_text }}</p>
         </article>
       </div>
@@ -166,19 +65,19 @@
 
     <section class="report-section">
       <h2 class="panel-title">证据摘要</h2>
-      <div class="report-grid" style="margin-top: 16px;">
+      <div class="report-grid report-spaced">
         <article class="metric-card">
           <p class="metric-label">告警总数</p>
           <p class="metric-value">{{ report.evidence_summary.alert_count }}</p>
         </article>
         <article class="metric-card">
           <p class="metric-label">主导行为</p>
-          <p class="metric-value" style="font-size: 24px;">{{ report.evidence_summary.dominant_behavior_name }}</p>
+          <p class="metric-value report-metric-sm">{{ report.evidence_summary.dominant_behavior_name }}</p>
           <p class="metric-hint">{{ report.evidence_summary.dominant_behavior_count }} 次</p>
         </article>
         <article class="metric-card">
           <p class="metric-label">最长行为</p>
-          <p class="metric-value" style="font-size: 24px;">{{ report.evidence_summary.longest_behavior_name }}</p>
+          <p class="metric-value report-metric-sm">{{ report.evidence_summary.longest_behavior_name }}</p>
           <p class="metric-hint">{{ report.evidence_summary.longest_duration_seconds }} 秒</p>
         </article>
         <article class="metric-card">
@@ -192,7 +91,7 @@
     <section class="report-section">
       <h2 class="panel-title">行为统计</h2>
       {% if report.behavior_rows %}
-      <div class="table-wrap" style="margin-top: 14px;">
+      <div class="table-wrap report-spaced-sm">
         <table>
           <thead>
             <tr>
@@ -219,14 +118,14 @@
         </table>
       </div>
       {% else %}
-      <p class="report-subtitle" style="margin-top: 12px;">本次视频未形成稳定的风险行为统计。</p>
+      <p class="report-subtitle report-subtitle-spaced">本次视频未形成稳定的风险行为统计。</p>
       {% endif %}
     </section>
 
     <section class="report-section">
       <h2 class="panel-title">时间线</h2>
       {% if report.events %}
-      <div class="stack-list" style="margin-top: 14px;">
+      <div class="stack-list report-spaced-sm">
         {% for item in report.events[:12] %}
         <article class="stack-item">
           <div class="stack-item-head">
@@ -238,33 +137,33 @@
         {% endfor %}
       </div>
       {% else %}
-      <p class="report-subtitle" style="margin-top: 12px;">暂无稳定风险事件。</p>
+      <p class="report-subtitle report-subtitle-spaced">暂无稳定风险事件。</p>
       {% endif %}
     </section>
 
     <section class="report-section">
       <h2 class="panel-title">关键截图</h2>
       {% if report.gallery_items %}
-      <div class="report-image-grid" style="margin-top: 14px;">
+      <div class="report-image-grid report-spaced-sm">
         {% for item in report.gallery_items %}
         <article class="report-image-card">
           <img src="{{ item.snapshot_path }}" alt="{{ item.behavior_name }}">
           <div>
             <strong>{{ item.behavior_name }}</strong>
-            <p class="report-subtitle" style="margin-top: 6px;">人数 {{ item.count }} · 持续 {{ item.duration_seconds }} 秒 · {{ item.timestamp_label }}</p>
+            <p class="report-subtitle report-subtitle-tight">人数 {{ item.count }} · 持续 {{ item.duration_seconds }} 秒 · {{ item.timestamp_label }}</p>
           </div>
         </article>
         {% endfor %}
       </div>
       {% else %}
-      <p class="report-subtitle" style="margin-top: 12px;">暂无关键截图。</p>
+      <p class="report-subtitle report-subtitle-spaced">暂无关键截图。</p>
       {% endif %}
     </section>
 
     <div class="report-grid">
       <section class="report-section">
         <h2 class="panel-title">处理性能</h2>
-        <div class="report-grid" style="margin-top: 14px;">
+        <div class="report-grid report-spaced-sm">
           <article class="metric-card">
             <p class="metric-label">分析耗时</p>
             <p class="metric-value">{{ report.analysis_metrics.analysis_elapsed_seconds }}s</p>
@@ -296,8 +195,8 @@
 
     <section class="report-section">
       <h2 class="panel-title">规则快照</h2>
-      <p class="report-subtitle" style="margin-top: 10px;">规则版本：{{ report.rule_snapshot_data.version_label }}</p>
-      <div class="table-wrap" style="margin-top: 14px;">
+      <p class="report-subtitle report-spaced-xs">规则版本：{{ report.rule_snapshot_data.version_label }}</p>
+      <div class="table-wrap report-spaced-sm">
         <table>
           <thead>
             <tr>

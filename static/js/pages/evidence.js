@@ -1,14 +1,10 @@
 (function () {
   const API = window.ClassroomAPI;
   const F = window.ClassroomFormatters;
+  const H = window.ClassroomDOM;
 
   function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    return H.escapeHtml(value);
   }
 
   function setText(id, value) {
@@ -64,7 +60,7 @@
       + '<div class="showcase-row"><strong>报告文件</strong><p>' + escapeHtml(report.filename || "--") + '</p></div>'
       + '<div class="showcase-row"><strong>更新时间</strong><p>' + escapeHtml(report.updated_at || "--") + '</p></div>'
       + '<div class="showcase-row"><strong>操作</strong><p><a class="btn primary mini-btn" href="'
-      + escapeHtml(report.report_url || "/report/latest") + '" target="_blank">打开报告</a></p></div>';
+      + escapeHtml(H.safePath(report.report_url, "/report/latest")) + '" target="_blank">打开报告</a></p></div>';
   }
 
   function renderSnapshot(snapshot) {

@@ -99,6 +99,10 @@
   font-size: 13px;
 }
 
+.health-item .health-item-extra {
+  margin-top: 8px;
+}
+
 .process-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

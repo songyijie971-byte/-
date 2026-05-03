@@ -5,9 +5,7 @@
   padding: clamp(28px, 4vw, 56px);
   min-height: clamp(520px, 78vh, 860px);
   background:
-    radial-gradient(circle at top left, rgba(213, 157, 85, 0.24), transparent 26%),
-    radial-gradient(circle at bottom right, rgba(47, 107, 102, 0.2), transparent 34%),
-    linear-gradient(135deg, rgba(255, 249, 241, 0.98), rgba(246, 236, 223, 0.9));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.9));
 }
 
 .dashboard-stage-copy {
@@ -64,7 +62,7 @@
 .dashboard-hero-actions .btn {
   padding: 16px 22px;
   font-size: 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-lg);
 }
 
 .dashboard-hero-actions .btn.ghost {

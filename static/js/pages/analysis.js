@@ -2,6 +2,7 @@
   const API = window.ClassroomAPI;
   const F = window.ClassroomFormatters;
   const State = window.ClassroomState;
+  const H = window.ClassroomDOM;
 
   function setText(id, value) {
     const el = document.getElementById(id);
@@ -14,12 +15,7 @@
   }
 
   function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    return H.escapeHtml(value);
   }
 
   function setProgress(value) {
@@ -63,7 +59,7 @@
     }
     box.innerHTML = items.slice(0, 6).map(function (item) {
       const action = item.report_ready
-        ? '<a class="btn ghost mini-btn" href="' + escapeHtml(item.report_url) + '" target="_blank">打开报告</a>'
+        ? '<a class="btn ghost mini-btn" href="' + escapeHtml(H.safePath(item.report_url, "/report/latest")) + '" target="_blank">打开报告</a>'
         : '<span class="mini-tag">' + escapeHtml(item.status_label) + "</span>";
       const errorParts = [];
       if (item.failure_stage) errorParts.push(item.failure_stage);

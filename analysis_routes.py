@@ -2,7 +2,7 @@ import os
 import uuid
 from datetime import datetime
 
-from flask import Response, g, jsonify, redirect, render_template, request, url_for
+from flask import Response, abort, g, jsonify, redirect, render_template, request, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
 from app_core.fs_utils import delete_files, list_files_with_prefix, safe_delete_file
@@ -21,7 +21,9 @@ def register_analysis_routes(app, deps):
     build_dashboard_payload = deps["build_dashboard_payload"]
     refresh_public_history_cache_if_needed = deps["refresh_public_history_cache_if_needed"]
     generate_frames = deps["generate_frames"]
+    allowed_image_file = deps["allowed_image_file"]
     allowed_video_file = deps["allowed_video_file"]
+    analyze_uploaded_image = deps["analyze_uploaded_image"]
     create_upload_job = deps["create_upload_job"]
     upload_analysis_dispatcher = deps["upload_analysis_dispatcher"]
     SessionFactory = deps["SessionFactory"]
@@ -38,6 +40,50 @@ def register_analysis_routes(app, deps):
     event_storage = deps["event_storage"]
     LOGGER = deps["LOGGER"]
     csrf_protect_api = deps["csrf_protect_api"]
+    runtime_lock = deps["runtime_lock"]
+    runtime_refs = deps["runtime_refs"]
+
+    def _normalize_relative_upload_path(path: str) -> str:
+        normalized = os.path.normpath(path or "").replace("\\", "/").lstrip("/")
+        if not normalized or normalized.startswith("../") or normalized == "..":
+            abort(404)
+        return normalized
+
+    def _safe_upload_abspath(relative_path: str) -> str:
+        upload_root = os.path.abspath(UPLOAD_DIR)
+        absolute_path = os.path.abspath(os.path.join(upload_root, relative_path))
+        if absolute_path != upload_root and not absolute_path.startswith(upload_root + os.sep):
+            abort(404)
+        return absolute_path
+
+    def _user_image_prefix(user_id: int) -> str:
+        return "images/user_{}/".format(user_id)
+
+    def _get_latest_image_analysis(user_id: int):
+        with runtime_lock:
+            records = runtime_refs.setdefault("image_analysis_records_by_user", {})
+            user_records = list(records.get(user_id, []))
+        return user_records[0] if user_records else None
+
+    def _store_image_analysis(user_id: int, payload: dict):
+        with runtime_lock:
+            records = runtime_refs.setdefault("image_analysis_records_by_user", {})
+            user_records = list(records.get(user_id, []))
+            user_records.insert(0, payload)
+            stale_records = user_records[6:]
+            records[user_id] = user_records[:6]
+
+        upload_root = os.path.abspath(UPLOAD_DIR)
+        for item in stale_records:
+            for key in ("source_relative_path", "annotated_relative_path"):
+                relative_path = item.get(key)
+                if not relative_path:
+                    continue
+                safe_delete_file(
+                    os.path.join(upload_root, relative_path),
+                    allowed_base_dir=upload_root,
+                    logger=LOGGER,
+                )
 
     def _measure_file_size(uploaded_file):
         stream = uploaded_file.stream
@@ -213,6 +259,97 @@ def register_analysis_routes(app, deps):
                 "job_backend": submission.backend,
             }
         )
+
+    @app.route("/api/analyze_image", methods=["POST"])
+    @login_required_api
+    @csrf_protect_api
+    def api_analyze_image():
+        file = request.files.get("image")
+        if file is None or not file.filename:
+            return jsonify({"ok": False, "message": "请选择图片文件"}), 400
+
+        original_name = file.filename
+        filename = secure_filename(original_name)
+        if not filename:
+            _, ext = os.path.splitext(original_name)
+            filename = "image{}".format(ext.lower())
+        if not allowed_image_file(filename):
+            return jsonify({"ok": False, "message": "仅支持 jpg / jpeg / png / bmp / webp"}), 400
+
+        size_bytes = _measure_file_size(file)
+        if size_bytes <= 0:
+            return jsonify({"ok": False, "message": "上传图片为空，请重新选择文件。"}), 400
+
+        current_max_upload_bytes = max_upload_bytes()
+        if size_bytes > current_max_upload_bytes:
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "message": "上传文件过大，请控制在 {} MB 以内。".format(
+                            round(current_max_upload_bytes / 1024 / 1024)
+                        ),
+                    }
+                ),
+                413,
+            )
+
+        image_dir = os.path.join(
+            UPLOAD_DIR,
+            "images",
+            "user_{}".format(g.current_user["id"]),
+        )
+        os.makedirs(image_dir, exist_ok=True)
+        stored_name = "{}_{}".format(uuid.uuid4().hex, filename)
+        file_path = os.path.join(image_dir, stored_name)
+        file.save(file_path)
+
+        relative_source_path = os.path.relpath(file_path, UPLOAD_DIR).replace("\\", "/")
+        try:
+            payload = analyze_uploaded_image(
+                file_path=file_path,
+                original_filename=original_name,
+                source_relative_path=relative_source_path,
+                source_size_bytes=size_bytes,
+            )
+        except Exception:
+            safe_delete_file(
+                file_path,
+                allowed_base_dir=os.path.abspath(UPLOAD_DIR),
+                logger=LOGGER,
+            )
+            raise
+
+        _store_image_analysis(g.current_user["id"], payload)
+        return jsonify(dict(payload, ok=True, available=True))
+
+    @app.route("/api/image_analysis/latest")
+    @login_required_api
+    def api_latest_image_analysis():
+        payload = _get_latest_image_analysis(g.current_user["id"])
+        if payload is None:
+            return jsonify(
+                {
+                    "ok": True,
+                    "available": False,
+                    "message": "暂无图片分析结果",
+                    "source_mode": "image",
+                    "source_label": "上传图片",
+                }
+            )
+        return jsonify(dict(payload, ok=True, available=True))
+
+    @app.route("/image-uploads/<path:filename>")
+    @login_required_page
+    def uploaded_image_file(filename):
+        relative_path = _normalize_relative_upload_path(filename)
+        if g.current_user["role"] != "admin":
+            if not relative_path.startswith(_user_image_prefix(g.current_user["id"])):
+                abort(404)
+        absolute_path = _safe_upload_abspath(relative_path)
+        if not os.path.exists(absolute_path):
+            abort(404)
+        return send_from_directory(UPLOAD_DIR, relative_path)
 
     @app.route("/api/my/uploads")
     @login_required_api

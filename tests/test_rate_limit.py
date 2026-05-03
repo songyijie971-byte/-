@@ -18,12 +18,14 @@ class LoginRateLimitTests(unittest.TestCase):
             "DEFAULT_ADMIN_USERNAME": os.environ.get("DEFAULT_ADMIN_USERNAME"),
             "DEFAULT_ADMIN_EMAIL": os.environ.get("DEFAULT_ADMIN_EMAIL"),
             "DEFAULT_ADMIN_PASSWORD": os.environ.get("DEFAULT_ADMIN_PASSWORD"),
+            "TRUST_X_FORWARDED_FOR": os.environ.get("TRUST_X_FORWARDED_FOR"),
         }
         os.environ["DATABASE_URL"] = "sqlite:///{}".format(self.db_path)
         os.environ["UPLOAD_DIR"] = self.upload_dir
         os.environ.pop("DEFAULT_ADMIN_USERNAME", None)
         os.environ.pop("DEFAULT_ADMIN_EMAIL", None)
         os.environ.pop("DEFAULT_ADMIN_PASSWORD", None)
+        os.environ.pop("TRUST_X_FORWARDED_FOR", None)
 
         if "webapp" in sys.modules:
             self.webapp = importlib.reload(sys.modules["webapp"])
@@ -65,10 +67,13 @@ class LoginRateLimitTests(unittest.TestCase):
             },
         )
 
-    def login_api(self, client, account, password, remote_addr="127.0.0.1"):
+    def login_api(self, client, account, password, remote_addr="127.0.0.1", headers=None):
+        request_headers = dict(self.csrf_headers(client))
+        if headers:
+            request_headers.update(headers)
         return client.post(
             "/api/auth/login",
-            headers=self.csrf_headers(client),
+            headers=request_headers,
             json={"account": account, "password": password},
             environ_base={"REMOTE_ADDR": remote_addr},
         )
@@ -114,6 +119,32 @@ class LoginRateLimitTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 200)
 
             blocked = self.login_page(client, "page_user", "wrong", remote_addr="5.6.7.8")
+            self.assertEqual(blocked.status_code, 429)
+
+    def test_spoofed_forwarded_for_does_not_bypass_limit_by_default(self):
+        register_client = self.app.test_client()
+        self.register(register_client, "xff_user", "xff_user@example.com", password="goodpass")
+
+        client = self.app.test_client()
+        now = 3000.0
+        with mock.patch("auth_service.time.time", side_effect=lambda: now):
+            for attempt in range(10):
+                response = self.login_api(
+                    client,
+                    "xff_user",
+                    "wrong",
+                    remote_addr="9.9.9.9",
+                    headers={"X-Forwarded-For": "203.0.113.{}".format(attempt)},
+                )
+                self.assertEqual(response.status_code, 400)
+
+            blocked = self.login_api(
+                client,
+                "xff_user",
+                "wrong",
+                remote_addr="9.9.9.9",
+                headers={"X-Forwarded-For": "198.51.100.8"},
+            )
             self.assertEqual(blocked.status_code, 429)
 
 

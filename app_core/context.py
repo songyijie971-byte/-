@@ -29,6 +29,7 @@ class AppContext:
     frame_lock: Any
     source_lock: Any
     video_pipeline_lock: Any
+    model_lock: Any
     model: Optional[Any] = None
 
 
@@ -80,6 +81,7 @@ def create_app_context(
     frame_lock = threading.Lock()
     source_lock = threading.Lock()
     video_pipeline_lock = threading.Lock()
+    model_lock = threading.Lock()
 
     initial_camera_status = initial_camera_status_factory()
     current_stats = {
@@ -99,6 +101,7 @@ def create_app_context(
         "temporal_analyzer": temporal_analyzer,
         "last_public_history_refresh_at": 0.0,
         "latest_camera_frame": None,
+        "image_analysis_records_by_user": {},
         "video_pipeline_started": False,
         "camera_reconnect_requested": False,
         "runtime_profile_key": "balanced",
@@ -131,4 +134,5 @@ def create_app_context(
         frame_lock=frame_lock,
         source_lock=source_lock,
         video_pipeline_lock=video_pipeline_lock,
+        model_lock=model_lock,
     )

@@ -167,6 +167,24 @@ class EventStorage:
             )
         return query.filter(AlertEvent.user_id == user_id)
 
+    def _retention_scope_query(
+        self,
+        session,
+        user_id: Optional[int] = None,
+        job_id: Optional[str] = None,
+    ):
+        query = session.query(AlertEvent)
+        if job_id is not None:
+            query = query.filter(AlertEvent.job_id == job_id)
+            if user_id is None:
+                return query.filter(AlertEvent.user_id.is_(None))
+            return query.filter(AlertEvent.user_id == user_id)
+
+        query = query.filter(AlertEvent.job_id.is_(None))
+        if user_id is None:
+            return query.filter(AlertEvent.user_id.is_(None))
+        return query.filter(AlertEvent.user_id == user_id)
+
     def build_snapshot_filename(
         self,
         behavior_key: str,
@@ -208,10 +226,15 @@ class EventStorage:
                 session.add(event)
                 session.flush()
 
-                total_count = session.query(AlertEvent).count()
+                scoped_events = self._retention_scope_query(
+                    session,
+                    user_id=user_id,
+                    job_id=job_id,
+                )
+                total_count = scoped_events.count()
                 if total_count > self.max_events:
                     removable_events = (
-                        session.query(AlertEvent)
+                        scoped_events
                         .order_by(AlertEvent.event_timestamp.asc(), AlertEvent.id.asc())
                         .limit(total_count - self.max_events)
                         .all()

@@ -12,8 +12,10 @@ from ultralytics import YOLO
 
 from app_config import build_runtime_summary, load_runtime_config, mask_database_url
 from app_core.context import create_app_context
+from app_core.inference_runtime import inference_device_label
 from app_core.registry import build_service_registry
 from database import AlertEvent, AnalysisReport, SystemConfig, User, VideoAnalysisJob, build_database_url, session_scope
+from focus_score import calculate_focus_score as _shared_calculate_focus_score
 from security_service import CSRF_COOKIE_NAME, ensure_csrf_token
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"))
@@ -131,6 +133,7 @@ def _build_initial_model_state():
             else "未检测到模型文件，相关接口会返回明确错误。"
         ),
         "path": RUNTIME_CONFIG.model_path,
+        "device": inference_device_label(),
         "last_error": None,
     }
 
@@ -169,6 +172,7 @@ def get_model():
             {
                 "status": "ok",
                 "loaded": True,
+                "device": inference_device_label(),
                 "message": "模型已加载，可用于实时监测与视频分析。",
                 "last_error": None,
             }
@@ -237,6 +241,62 @@ def calculate_focus_score(stable_counts: dict) -> dict:
         "rule_text": "100 - 低头×12 - 睡觉×20 - 转头交谈×15 + 举手×4",
         "limits_text": "该评分仅用于课堂状态可视化展示，不直接等同于教学质量评价。",
     }
+
+
+# Rebind these helpers so every caller shares the same scoring semantics and
+# model initialization is synchronized across request and worker threads.
+def get_model():
+    if APP_CONTEXT.model is not None:
+        return APP_CONTEXT.model
+
+    with APP_CONTEXT.model_lock:
+        if APP_CONTEXT.model is not None:
+            return APP_CONTEXT.model
+
+        if not os.path.exists(RUNTIME_CONFIG.model_path):
+            with APP_CONTEXT.runtime_lock:
+                APP_CONTEXT.runtime_refs["model_state"].update(
+                    {
+                        "status": "error",
+                        "loaded": False,
+                        "message": "未找到模型文件，请检查 YOLO_MODEL_PATH 配置。",
+                        "last_error": "missing_model_file",
+                    }
+                )
+            raise FileNotFoundError(
+                "未找到模型文件，请检查 YOLO_MODEL_PATH 配置: {}".format(
+                    RUNTIME_CONFIG.model_path
+                )
+            )
+
+        try:
+            APP_CONTEXT.model = YOLO(RUNTIME_CONFIG.model_path, task="detect")
+            with APP_CONTEXT.runtime_lock:
+                APP_CONTEXT.runtime_refs["model_state"].update(
+                    {
+                        "status": "ok",
+                        "loaded": True,
+                        "device": inference_device_label(),
+                        "message": "模型已加载，可用于实时监测与视频分析。",
+                        "last_error": None,
+                    }
+                )
+            return APP_CONTEXT.model
+        except Exception as exc:
+            with APP_CONTEXT.runtime_lock:
+                APP_CONTEXT.runtime_refs["model_state"].update(
+                    {
+                        "status": "error",
+                        "loaded": False,
+                        "message": "模型加载失败，请检查文件格式与推理环境。",
+                        "last_error": str(exc),
+                    }
+                )
+            raise
+
+
+def calculate_focus_score(stable_counts: dict) -> dict:
+    return _shared_calculate_focus_score(stable_counts)
 
 
 def build_health_payload():

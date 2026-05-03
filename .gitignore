@@ -1,11 +1,21 @@
 .venv/
 .idea/
+.claude/
+.cursor/skills/
 __pycache__/
 *.py[cod]
 
 # Local caches
 .npm-cache/
 .pytest_cache/
+
+# Generated probe outputs and temporary files
+dist/
+*.zip
+model_probe_outputs/
+result.jpg
+~$*.docx
+*.log
 
 # Runtime artifacts / uploads / snapshots / queues
 data/uploads/
@@ -25,4 +35,3 @@ data/runtime/
 *.avi
 *.mkv
 *.webm
-

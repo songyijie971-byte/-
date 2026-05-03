@@ -12,6 +12,7 @@ from ultralytics import YOLO
 from analysis_service import create_upload_analysis_service
 from app_config import build_runtime_summary, load_runtime_config
 from app_core.context import create_app_context
+from app_core.inference_runtime import inference_device_label
 from app_core.job_executor import UploadAnalysisTask
 from app_core.repositories import build_repository_helpers
 from behavior_core import (
@@ -32,6 +33,7 @@ from database import (
     session_scope,
 )
 from experiment_data import EXPERIMENT_OVERVIEW
+from focus_score import calculate_focus_score as _shared_calculate_focus_score
 from report_service import build_report_services
 
 LOGGER = logging.getLogger(__name__)
@@ -86,36 +88,13 @@ def _build_initial_model_state():
         "loaded": False,
         "message": "Model file detected." if model_exists else "Model file is missing.",
         "path": runtime_config.model_path,
+        "device": inference_device_label(),
         "last_error": None,
     }
 
 
 def _calculate_focus_score(stable_counts: dict) -> dict:
-    penalties = (
-        stable_counts.get("low_head", 0) * 12
-        + stable_counts.get("sleep", 0) * 20
-        + stable_counts.get("turn_talk", 0) * 15
-    )
-    rewards = stable_counts.get("hand_raise", 0) * 4
-    score = max(0, min(100, 100 - penalties + rewards))
-
-    if score >= 80:
-        level = "high"
-        summary_text = "Classroom focus is currently high."
-    elif score >= 60:
-        level = "mid"
-        summary_text = "Classroom focus is moderate."
-    else:
-        level = "low"
-        summary_text = "Classroom focus is low and may need intervention."
-
-    return {
-        "score": score,
-        "level": level,
-        "summary_text": summary_text,
-        "rule_text": "100 - low_head*12 - sleep*20 - turn_talk*15 + hand_raise*4",
-        "limits_text": "This score is intended for classroom-state visualization only.",
-    }
+    return _shared_calculate_focus_score(stable_counts)
 
 
 def _build_worker_service():
@@ -130,8 +109,11 @@ def _build_worker_service():
     def get_model():
         if app_context.model is not None:
             return app_context.model
-        app_context.model = YOLO(runtime_config.model_path, task="detect")
-        return app_context.model
+        with app_context.model_lock:
+            if app_context.model is not None:
+                return app_context.model
+            app_context.model = YOLO(runtime_config.model_path, task="detect")
+            return app_context.model
 
     def save_alert_snapshot(frame, alert_payload, user_id=None, job_id=None):
         filename_prefix = job_id[:8] if job_id else None
@@ -174,6 +156,7 @@ def _build_worker_service():
 
     deps = {
         "AlertEvent": AlertEvent,
+        "ALLOWED_IMAGE_EXTENSIONS": set(runtime_config.allowed_image_extensions),
         "ALLOWED_VIDEO_EXTENSIONS": set(runtime_config.allowed_video_extensions),
         "AnalysisReport": AnalysisReport,
         "BEHAVIOR_DISPLAY_NAMES": BEHAVIOR_DISPLAY_NAMES,
@@ -215,6 +198,7 @@ def _build_worker_service():
         "normalize_detections": normalize_detections,
         "on_runtime_settings_updated": lambda settings: None,
         "or_": or_,
+        "runtime_lock": app_context.runtime_lock,
         "runtime_refs": app_context.runtime_refs,
         "save_alert_snapshot": save_alert_snapshot,
         "session_scope": session_scope,

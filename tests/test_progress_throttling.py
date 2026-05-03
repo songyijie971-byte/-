@@ -129,6 +129,8 @@ class ProgressThrottlingTests(unittest.TestCase):
             json_loads=lambda *args, **kwargs: {},
             format_timestamp=lambda *args, **kwargs: "",
             format_datetime=lambda *args, **kwargs: "",
+            upload_dir=temp_dir,
+            allowed_image_extensions={".png"},
             allowed_video_extensions={".mp4"},
             logger=logging.getLogger("test_progress"),
             cv2=fake_cv2,

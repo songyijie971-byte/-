@@ -1,0 +1,104 @@
+{% extends "layout/base.html" %}
+
+{% block title %}运行部署{% endblock %}
+{% block page_title %}运行部署{% endblock %}
+{% block page_subtitle %}展示模型、数据库、存储、任务队列和运行参数，让系统可维护性更清楚{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/showcase.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="showcase-hero glass-card">
+  <div>
+    <p class="showcase-kicker">OPERATIONS CONSOLE</p>
+    <h3 class="showcase-title">把“能跑起来”变成可检查、可说明、可部署的能力。</h3>
+    <p class="showcase-text">本页复用健康检查接口，集中展示数据库、模型文件、上传目录、摄像头状态、任务队列和运行参数，适合说明系统具备实际运行和维护能力。</p>
+  </div>
+  <div class="showcase-side">
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">系统状态</p>
+      <p id="opsOverallStatus" class="metric-value">--</p>
+      <p id="opsCheckedAt" class="metric-hint">等待健康检查</p>
+    </article>
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">任务后端</p>
+      <p id="opsJobBackend" class="metric-value">--</p>
+      <p class="metric-hint">支持线程、进程或文件队列模式。</p>
+    </article>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">健康检查</h3>
+      <p id="opsHealthMessage" class="panel-subtitle">正在读取系统健康状态。</p>
+    </div>
+  </div>
+  <div id="opsHealthGrid" class="health-grid">
+    <article class="health-item"><h4>数据库</h4><p>等待检查结果</p></article>
+    <article class="health-item"><h4>模型文件</h4><p>等待检查结果</p></article>
+    <article class="health-item"><h4>上传存储</h4><p>等待检查结果</p></article>
+    <article class="health-item"><h4>摄像头</h4><p>等待检查结果</p></article>
+  </div>
+</section>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <h3 class="panel-title">运行参数</h3>
+    <p class="panel-subtitle">用于答辩时说明系统参数可配置，部署环境不是写死的。</p>
+    <div class="table-wrap">
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>当前值</th>
+          </tr>
+        </thead>
+        <tbody id="opsRuntimeTable">
+          <tr><td>状态</td><td>等待健康检查</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 class="panel-title">任务队列</h3>
+    <p class="panel-subtitle">展示上传视频分析任务的执行后端与队列状态。</p>
+    <div id="opsQueueList" class="showcase-list">
+      <div class="showcase-row"><strong>队列状态</strong><p>等待健康检查</p></div>
+    </div>
+  </section>
+</div>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">部署说明</h3>
+      <p class="panel-subtitle">这些说明不改变系统逻辑，但能帮助老师看到工程化准备。</p>
+    </div>
+  </div>
+  <div class="showcase-band">
+    <article class="showcase-tile">
+      <p class="showcase-mini">LOCAL DEMO</p>
+      <h4>本地演示</h4>
+      <p>使用 SQLite 快速启动，适合答辩现场演示登录、上传、分析和报告查看。</p>
+    </article>
+    <article class="showcase-tile">
+      <p class="showcase-mini">DATABASE</p>
+      <h4>数据库切换</h4>
+      <p>通过 DATABASE_URL 切换 SQLite 或 MySQL，便于从课程演示扩展到部署环境。</p>
+    </article>
+    <article class="showcase-tile dark">
+      <p class="showcase-mini">MODEL</p>
+      <h4>模型文件检查</h4>
+      <p>健康检查会提示模型文件是否存在，避免系统静默失败，便于现场排查。</p>
+    </article>
+  </div>
+</section>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/operations.js') }}"></script>
+{% endblock %}

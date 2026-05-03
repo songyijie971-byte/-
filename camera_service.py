@@ -3,6 +3,8 @@ import time
 
 import numpy as np
 
+from app_core.inference_runtime import predict_with_preferred_device
+
 
 def build_camera_services(deps):
     cv2 = deps["cv2"]
@@ -472,8 +474,10 @@ def build_camera_services(deps):
                 timestamp = time.time()
                 try:
                     model = get_model()
-                    results = model.predict(
+                    results = predict_with_preferred_device(
+                        model,
                         frame,
+                        logger=LOGGER,
                         conf=0.35,
                         iou=0.45,
                         imgsz=yolo_imgsz(),

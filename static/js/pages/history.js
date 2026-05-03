@@ -25,9 +25,9 @@
     image.src = snapshot.snapshot_path + "?t=" + Date.now();
     meta.textContent =
       (snapshot.behavior_name || "--") +
-      "锛屼汉鏁?" +
+      " · 人数 " +
       (snapshot.count || 0) +
-      "锛屾椂闂?" +
+      " · 时间 " +
       F.formatTime(snapshot.timestamp);
   }
 
@@ -35,7 +35,7 @@
     const box = document.getElementById("behaviorTotals");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤缁熻鏁版嵁</p>';
+      box.innerHTML = '<p class="empty-text">暂无行为统计</p>';
       return;
     }
     box.innerHTML = items
@@ -48,7 +48,7 @@
           "</p>" +
           '<span class="trend-label">' +
           item.count +
-          " 娆?/span>" +
+          " 次</span>" +
           "</div>" +
           "</article>"
         );
@@ -60,7 +60,7 @@
     const box = document.getElementById("timelineList");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤浜嬩欢</p>';
+      box.innerHTML = '<p class="empty-text">暂无时间线数据</p>';
       return;
     }
     box.innerHTML = items
@@ -75,9 +75,9 @@
           F.formatTime(item.timestamp) +
           "</span>" +
           "</div>" +
-          '<p class="stack-item-meta">鎸佺画 ' +
+          '<p class="stack-item-meta">持续 ' +
           F.formatSeconds(item.duration_seconds) +
-          "锛屾秹鍙婁汉鏁?" +
+          " · 人数 " +
           item.count +
           "</p>" +
           "</article>"
@@ -90,7 +90,7 @@
     const box = document.getElementById("trendChart");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤瓒嬪娍鏁版嵁</p>';
+      box.innerHTML = '<p class="empty-text">暂无趋势数据</p>';
       return;
     }
     box.innerHTML = items

@@ -1,299 +1,239 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>行为规则配置中心</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/tokens.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/rules.css') }}">
-</head>
-<body class="rules-body">
-  <div class="rules-page">
-    <section class="rules-hero">
-      <div>
-        <div class="rules-eyebrow">Rule Config / Admin Panel</div>
-        <h1 class="rules-title">行为规则与运行参数控制台</h1>
-        <p class="rules-lead">
-          这里既可以调整课堂行为规则，也可以切换预设好的运行参数方案。
-          对演示来说，目标不是逐个改值，而是让规则管理看起来更像一套正式产品能力。
-        </p>
-        <div class="rules-actions">
-          <a class="btn subtle" href="/dashboard">返回总览</a>
-          <a class="btn ghost" href="/evaluation">查看实验评估</a>
-          <button class="btn primary" id="saveButton" type="button">保存当前配置</button>
-        </div>
-      </div>
+{% extends "layout/base.html" %}
 
-      <div class="rules-side">
-        <div class="rules-mini-card">
-          <div class="rules-mini-label">当前规则版本</div>
-          <div id="ruleVersion" class="rules-mini-value">{{ rule_version_label }}</div>
-        </div>
-        <div class="rules-mini-card">
-          <div class="rules-mini-label">当前运行方案</div>
-          <details class="mini-details">
-            <summary>
-              <span class="mini-value-inline" id="runtimeProfileName">{{ selected_runtime_profile.label }}</span>
-              <span class="badge editable">说明</span>
-            </summary>
-            <div class="mini-desc" id="runtimeProfileDescription">{{ selected_runtime_profile.description }}</div>
-          </details>
-        </div>
-      </div>
-    </section>
+{% block title %}规则配置{% endblock %}
+{% block page_title %}规则配置{% endblock %}
+{% block page_subtitle %}调整课堂行为判定规则与运行参数预设，并保留原有保存逻辑与数据结构{% endblock %}
 
-    <div id="statusBox" class="status"></div>
-
-    <section class="rules-panel">
-      <div class="rules-section-head">
-        <div>
-          <h2 class="rules-section-title">行为时序规则</h2>
-          <div class="rules-muted">每种行为都可以单独调整阈值，便于展示差异化效果。</div>
-        </div>
-      </div>
-
-      <div class="rules-grid-main">
-        <div class="rules-table-wrap">
-          <table class="rules-table">
-            <thead>
-              <tr>
-                <th>行为</th>
-                <th>说明</th>
-                <th>连续帧</th>
-                <th>告警（秒）</th>
-                <th>启用</th>
-              </tr>
-            </thead>
-            <tbody id="rulesTableBody">
-              {% for item in rule_items %}
-              <tr data-key="{{ item.behavior_key }}">
-                <td>
-                  <div class="behavior-name">{{ item.behavior_name }}</div>
-                  <div class="behavior-time" title="最近更新：{{ item.updated_at }}">最近更新：{{ item.updated_at }}</div>
-                </td>
-                <td>{{ item.description }}</td>
-                <td><input type="number" min="1" step="1" value="{{ item.min_consecutive_frames }}" data-field="min_consecutive_frames"></td>
-                <td><input type="number" min="0" step="0.1" value="{{ item.alert_after_seconds if item.alert_after_seconds is not none else '' }}" data-field="alert_after_seconds"></td>
-                <td><input type="checkbox" data-field="alert_enabled" {% if item.alert_enabled %}checked{% endif %}></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="rules-side">
-          <details class="side-details" open>
-            <summary>
-              <span>运行参数预设</span>
-              <span class="badge editable">保存即生效</span>
-            </summary>
-            <div class="side-body">
-              <div class="control-grid">
-                <div style="flex: 1 1 220px;">
-                  <label class="rules-mini-label" for="runtimeProfileSelect">选择方案</label>
-                  <select id="runtimeProfileSelect">
-                    {% for option in runtime_profile_options %}
-                    <option value="{{ option.key }}" {% if option.key == selected_runtime_profile_key %}selected{% endif %}>
-                      {{ option.label }}
-                    </option>
-                    {% endfor %}
-                  </select>
-                </div>
-                <div class="rules-muted">保存后会立即生效于后续实时推理和上传分析。</div>
-              </div>
-              <details class="scheme-note">
-                <summary>
-                  <span>当前说明</span>
-                  <span class="scheme-name" id="schemeName">{{ selected_runtime_profile.label }}</span>
-                </summary>
-                <p id="schemeDescription">{{ selected_runtime_profile.description }}</p>
-              </details>
-            </div>
-          </details>
-
-          <details class="side-details">
-            <summary>方案切换建议</summary>
-            <div class="side-body">
-              <p>答辩时建议优先使用“均衡模式”作为默认方案；如果现场机器压力较大，可切到“实时优先”；如果要突出分析细节，则切到“精度优先”。</p>
-            </div>
-          </details>
-
-          <details class="side-details">
-            <summary>操作提示</summary>
-            <div class="side-body">
-              <p>模型路径和摄像头索引继续保持只读，避免误改影响系统启动；其余关键参数通过预设方案统一切换，管理起来更直观。</p>
-            </div>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <section class="rules-panel">
-      <details class="param-details" id="runtimeParamDetails">
-        <summary>
-          <span class="param-title">运行参数（点击展开）</span>
-          <span class="param-counter">
-            <span class="badge editable">可改 <span id="paramEditableCount">0</span></span>
-            <span class="rules-muted">/ 总计 <span id="paramTotalCount">0</span></span>
-          </span>
-        </summary>
-        <div class="rules-muted param-hint">带“预设可改”标记的参数会跟随下拉方案一起变化。</div>
-        <div class="param-toolbar">
-          <input type="text" id="paramSearchInput" placeholder="搜索参数名、值" autocomplete="off">
-          <div style="display: inline-flex; align-items: center; gap: 8px;">
-            <label class="rules-mini-label" for="paramFilterSelect" style="margin: 0;">显示</label>
-            <select id="paramFilterSelect">
-              <option value="editable" selected>仅预设可改</option>
-              <option value="all">全部</option>
-            </select>
-          </div>
-        </div>
-        <div class="param-table-wrap">
-          <table class="param-table" aria-label="运行参数列表">
-            <thead>
-              <tr>
-                <th>参数</th>
-                <th>值</th>
-                <th style="text-align: right;">标记</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in runtime_parameters %}
-              <tr data-editable="{% if item.editable %}1{% else %}0{% endif %}" data-text="{{ (item.name ~ ' ' ~ item.value) | e }}">
-                <td class="param-name">{{ item.name }}</td>
-                <td class="param-value">{{ item.value }}</td>
-                <td class="param-mark">
-                  <span class="badge {% if item.editable %}editable{% else %}readonly{% endif %}">
-                    {% if item.editable %}预设可改{% else %}固定参数{% endif %}
-                  </span>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </details>
-    </section>
+{% block content %}
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">当前配置</h3>
+      <p class="panel-subtitle">版本：<strong>{{ rule_version_label }}</strong> ｜ 方案：{{ selected_runtime_profile.label }}</p>
+    </div>
+    <div class="dashboard-hero-actions">
+      <a class="btn ghost" href="/dashboard">返回首页</a>
+      <a class="btn ghost" href="/evaluation">实验评估</a>
+      <button class="btn primary" id="saveButton" type="button">保存配置</button>
+    </div>
   </div>
 
-  <script>
-    function readCookie(name) {
-      const raw = document.cookie || "";
-      const prefix = name + "=";
-      const parts = raw.split(/;\s*/);
-      for (let i = 0; i < parts.length; i += 1) {
-        if (parts[i].indexOf(prefix) === 0) {
-          return decodeURIComponent(parts[i].slice(prefix.length));
-        }
+  <div id="statusBox" class="alert-strip info hidden"></div>
+</section>
+
+<section class="glass-card" style="margin-top: 20px;">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">行为规则</h3>
+      <p class="panel-subtitle">按行为项目设置连续帧阈值、告警秒数和启用状态。</p>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>行为</th>
+          <th>说明</th>
+          <th>连续帧</th>
+          <th>告警秒数</th>
+          <th>启用</th>
+        </tr>
+      </thead>
+      <tbody id="rulesTableBody">
+        {% for item in rule_items %}
+        <tr data-key="{{ item.behavior_key }}">
+          <td>
+            <strong>{{ item.behavior_name }}</strong>
+            <div class="metric-hint" style="margin-top: 6px;">最近更新：{{ item.updated_at }}</div>
+          </td>
+          <td>{{ item.description }}</td>
+          <td><input type="number" min="1" step="1" value="{{ item.min_consecutive_frames }}" data-field="min_consecutive_frames"></td>
+          <td><input type="number" min="0" step="0.1" value="{{ item.alert_after_seconds if item.alert_after_seconds is not none else '' }}" data-field="alert_after_seconds"></td>
+          <td><input type="checkbox" data-field="alert_enabled" {% if item.alert_enabled %}checked{% endif %}></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="grid-main" style="margin-top: 20px;">
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">运行参数预设</h3>
+        <p class="panel-subtitle">保存后会立即用于后续实时监测和上传分析。</p>
+      </div>
+    </div>
+
+    <label class="metric-label" for="runtimeProfileSelect" style="display: block; margin-bottom: 8px;">选择方案</label>
+    <select id="runtimeProfileSelect" style="width: 100%; max-width: 360px;">
+      {% for option in runtime_profile_options %}
+      <option value="{{ option.key }}" {% if option.key == selected_runtime_profile_key %}selected{% endif %}>
+        {{ option.label }}
+      </option>
+      {% endfor %}
+    </select>
+
+    <div class="stack-list" style="margin-top: 16px;">
+      <article class="stack-item">
+        <p class="stack-item-title" id="runtimeProfileName">{{ selected_runtime_profile.label }}</p>
+        <p class="stack-item-meta" id="runtimeProfileDescription">{{ selected_runtime_profile.description }}</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">运行参数列表</h3>
+        <p class="panel-subtitle">默认只展示“预设可改”的参数。</p>
+      </div>
+    </div>
+
+    <div class="dashboard-hero-actions" style="margin-bottom: 12px;">
+      <input type="text" id="paramSearchInput" placeholder="搜索参数名或参数值" autocomplete="off">
+      <select id="paramFilterSelect">
+        <option value="editable" selected>仅看可编辑</option>
+        <option value="all">查看全部</option>
+      </select>
+    </div>
+
+    <p class="panel-subtitle" style="margin-bottom: 12px;">
+      可编辑 <span id="paramEditableCount">0</span> / 总计 <span id="paramTotalCount">0</span>
+    </p>
+
+    <div class="table-wrap">
+      <table aria-label="运行参数列表">
+        <thead>
+          <tr>
+            <th>参数</th>
+            <th>值</th>
+            <th>标记</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in runtime_parameters %}
+          <tr data-editable="{% if item.editable %}1{% else %}0{% endif %}" data-text="{{ (item.name ~ ' ' ~ item.value) | e }}">
+            <td>{{ item.name }}</td>
+            <td>{{ item.value }}</td>
+            <td>
+              <span class="panel-chip">
+                {% if item.editable %}预设可改{% else %}固定参数{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+  function readCookie(name) {
+    const raw = document.cookie || "";
+    const prefix = name + "=";
+    const parts = raw.split(/;\s*/);
+    for (let i = 0; i < parts.length; i += 1) {
+      if (parts[i].indexOf(prefix) === 0) {
+        return decodeURIComponent(parts[i].slice(prefix.length));
       }
-      return "";
     }
+    return "";
+  }
 
-    function csrfHeaders() {
-      const token = readCookie("csrf_token");
-      return token ? { "X-CSRF-Token": token } : {};
-    }
+  function csrfHeaders() {
+    const token = readCookie("csrf_token");
+    return token ? { "X-CSRF-Token": token } : {};
+  }
 
-    const runtimeProfiles = {{ runtime_profile_options | tojson }};
+  const runtimeProfiles = {{ runtime_profile_options | tojson }};
 
-    function collectRules() {
-      return Array.from(document.querySelectorAll("#rulesTableBody tr")).map((row) => ({
-        behavior_key: row.dataset.key,
-        min_consecutive_frames: Number(row.querySelector('[data-field="min_consecutive_frames"]').value || 1),
-        alert_after_seconds: row.querySelector('[data-field="alert_after_seconds"]').value,
-        alert_enabled: row.querySelector('[data-field="alert_enabled"]').checked,
-      }));
-    }
+  function collectRules() {
+    return Array.from(document.querySelectorAll("#rulesTableBody tr")).map((row) => ({
+      behavior_key: row.dataset.key,
+      min_consecutive_frames: Number(row.querySelector('[data-field="min_consecutive_frames"]').value || 1),
+      alert_after_seconds: row.querySelector('[data-field="alert_after_seconds"]').value,
+      alert_enabled: row.querySelector('[data-field="alert_enabled"]').checked,
+    }));
+  }
 
-    function setStatus(message, isError = false) {
-      const box = document.getElementById("statusBox");
-      box.textContent = message;
-      box.className = `status ${isError ? "error" : "ok"}`;
-    }
+  function setStatus(message, isError = false) {
+    const box = document.getElementById("statusBox");
+    box.textContent = message;
+    box.className = `alert-strip ${isError ? "warning" : "success"}`;
+  }
 
-    function updateProfileCopy(profileKey) {
-      const profile = runtimeProfiles.find((item) => item.key === profileKey);
-      if (!profile) return;
-      document.getElementById("schemeName").textContent = profile.label;
-      document.getElementById("schemeDescription").textContent = profile.description;
-      document.getElementById("runtimeProfileName").textContent = profile.label;
-      document.getElementById("runtimeProfileDescription").textContent = profile.description;
-    }
+  function updateProfileCopy(profileKey) {
+    const profile = runtimeProfiles.find((item) => item.key === profileKey);
+    if (!profile) return;
+    document.getElementById("runtimeProfileName").textContent = profile.label;
+    document.getElementById("runtimeProfileDescription").textContent = profile.description;
+  }
 
-    document.getElementById("runtimeProfileSelect").addEventListener("change", (event) => {
-      updateProfileCopy(event.target.value);
-    });
+  document.getElementById("runtimeProfileSelect").addEventListener("change", (event) => {
+    updateProfileCopy(event.target.value);
+  });
 
-    document.getElementById("saveButton").addEventListener("click", async () => {
-      const button = document.getElementById("saveButton");
-      button.disabled = true;
-      try {
-        const response = await fetch("/api/admin/behavior_rules", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: Object.assign({ "Content-Type": "application/json" }, csrfHeaders()),
-          body: JSON.stringify({
-            items: collectRules(),
-            runtime_profile_key: document.getElementById("runtimeProfileSelect").value,
-          }),
-        });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          throw new Error(data.message || "保存失败");
-        }
-        document.getElementById("ruleVersion").textContent = data.version_label || "已更新";
-        updateProfileCopy(data.selected_runtime_profile_key);
-        setStatus("规则与运行参数方案已保存，新的实时推理和上传分析会按当前方案执行。");
-        window.setTimeout(() => window.location.reload(), 500);
-      } catch (error) {
-        setStatus(error.message || "保存失败", true);
-      } finally {
-        button.disabled = false;
+  document.getElementById("saveButton").addEventListener("click", async () => {
+    const button = document.getElementById("saveButton");
+    button.disabled = true;
+    try {
+      const response = await fetch("/api/admin/behavior_rules", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: Object.assign({ "Content-Type": "application/json" }, csrfHeaders()),
+        body: JSON.stringify({
+          items: collectRules(),
+          runtime_profile_key: document.getElementById("runtimeProfileSelect").value,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "保存失败");
       }
-    });
+      updateProfileCopy(data.selected_runtime_profile_key);
+      setStatus("规则与运行参数已保存。");
+      window.setTimeout(() => window.location.reload(), 500);
+    } catch (error) {
+      setStatus(error.message || "保存失败", true);
+    } finally {
+      button.disabled = false;
+    }
+  });
 
-    function initRuntimeParamsCompactPanel() {
-      const details = document.getElementById("runtimeParamDetails");
-      if (!details) return;
+  function initRuntimeParamPanel() {
+    const rows = Array.from(document.querySelectorAll("tbody tr[data-editable]"));
+    const totalEl = document.getElementById("paramTotalCount");
+    const editableEl = document.getElementById("paramEditableCount");
+    const searchInput = document.getElementById("paramSearchInput");
+    const filterSelect = document.getElementById("paramFilterSelect");
 
-      const rows = Array.from(details.querySelectorAll("tbody tr"));
-      const totalCount = rows.length;
-      const editableCount = rows.filter((row) => row.dataset.editable === "1").length;
+    if (totalEl) totalEl.textContent = String(rows.length);
+    if (editableEl) editableEl.textContent = String(rows.filter((row) => row.dataset.editable === "1").length);
 
-      const totalEl = document.getElementById("paramTotalCount");
-      const editableEl = document.getElementById("paramEditableCount");
-      if (totalEl) totalEl.textContent = String(totalCount);
-      if (editableEl) editableEl.textContent = String(editableCount);
+    function applyFilter() {
+      const keyword = (searchInput.value || "").trim().toLowerCase();
+      const mode = filterSelect.value || "editable";
 
-      const searchInput = document.getElementById("paramSearchInput");
-      const filterSelect = document.getElementById("paramFilterSelect");
-
-      function applyRuntimeParamFilter() {
-        const q = (searchInput.value || "").trim().toLowerCase();
-        const mode = filterSelect.value || "editable";
-
-        rows.forEach((row) => {
-          const isEditable = row.dataset.editable === "1";
-          if (mode === "editable" && !isEditable) {
-            row.style.display = "none";
-            return;
-          }
-          const text = (row.dataset.text || row.textContent || "").toLowerCase();
-          if (q && !text.includes(q)) {
-            row.style.display = "none";
-            return;
-          }
-          row.style.display = "";
-        });
-      }
-
-      searchInput.addEventListener("input", applyRuntimeParamFilter);
-      filterSelect.addEventListener("change", applyRuntimeParamFilter);
-      applyRuntimeParamFilter();
+      rows.forEach((row) => {
+        const editable = row.dataset.editable === "1";
+        const text = (row.dataset.text || row.textContent || "").toLowerCase();
+        const hiddenByMode = mode === "editable" && !editable;
+        const hiddenByKeyword = keyword && !text.includes(keyword);
+        row.style.display = hiddenByMode || hiddenByKeyword ? "none" : "";
+      });
     }
 
-    initRuntimeParamsCompactPanel();
-  </script>
-</body>
-</html>
+    searchInput.addEventListener("input", applyFilter);
+    filterSelect.addEventListener("change", applyFilter);
+    applyFilter();
+  }
+
+  initRuntimeParamPanel();
+</script>
+{% endblock %}

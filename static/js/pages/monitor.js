@@ -18,7 +18,7 @@
     }
     const first = alerts[0];
     bar.className = "alert-strip warning";
-    bar.textContent = "褰撳墠瀛樺湪 " + alerts.length + " 鏉℃椿璺冨憡璀︼紝閲嶇偣鍏虫敞 " + first.behavior_name + "锛屼汉鏁?" + first.count + "锛屾寔缁?" + F.formatSeconds(first.duration_seconds) + "銆?;
+    bar.textContent = "当前有 " + alerts.length + " 条告警，最新行为为 " + first.behavior_name + "，人数 " + first.count + "，持续 " + F.formatSeconds(first.duration_seconds);
   }
 
   function renderSnapshot(snapshot) {
@@ -36,18 +36,18 @@
     empty.style.display = "none";
     image.classList.remove("hidden");
     image.src = snapshot.snapshot_path + "?t=" + Date.now();
-    meta.textContent = (snapshot.behavior_name || "--") + "锛屼汉鏁?" + (snapshot.count || 0) + "锛屾椂闂?" + F.formatTime(snapshot.timestamp);
+    meta.textContent = (snapshot.behavior_name || "--") + " · 人数 " + (snapshot.count || 0) + " · 时间 " + F.formatTime(snapshot.timestamp);
   }
 
   function renderRanking(items) {
     const box = document.getElementById("behaviorRanking");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤鎺掕鏁版嵁</p>';
+      box.innerHTML = '<p class="empty-text">暂无排行数据</p>';
       return;
     }
     box.innerHTML = items.map(function (item) {
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">鎬昏 ' + item.count + ' 娆?/span></div><p class="stack-item-meta">璇ヨ涓烘槸杩戞湡璇惧爞娉㈠姩涓殑涓昏缁勬垚閮ㄥ垎銆?/p></article>';
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">' + item.count + ' 次</span></div><p class="stack-item-meta">当前窗口内出现频次较高，可优先关注该行为。</p></article>';
     }).join("");
   }
 
@@ -55,11 +55,11 @@
     const box = document.getElementById("recentAlertsTimeline");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤浜嬩欢</p>';
+      box.innerHTML = '<p class="empty-text">暂无告警数据</p>';
       return;
     }
     box.innerHTML = items.map(function (item) {
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="trend-label">' + F.formatTime(item.timestamp) + '</span></div><p class="stack-item-meta">鎸佺画 ' + F.formatSeconds(item.duration_seconds) + '锛屾秹鍙婁汉鏁?' + item.count + "</p></article>";
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="trend-label">' + F.formatTime(item.timestamp) + '</span></div><p class="stack-item-meta">持续 ' + F.formatSeconds(item.duration_seconds) + ' · 人数 ' + item.count + "</p></article>";
     }).join("");
   }
 
@@ -67,7 +67,7 @@
     const box = document.getElementById("trendChart");
     if (!box) return;
     if (!items || !items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤瓒嬪娍鏁版嵁</p>';
+      box.innerHTML = '<p class="empty-text">暂无趋势数据</p>';
       return;
     }
     box.innerHTML = items.map(function (item) {
@@ -81,19 +81,19 @@
     if (!box) return;
     const items = ruleSummary && ruleSummary.items ? ruleSummary.items : [];
     if (!items.length) {
-      box.innerHTML = '<p class="empty-text">鏆傛棤瑙勫垯鎽樿</p>';
+      box.innerHTML = '<p class="empty-text">暂无规则摘要</p>';
       return;
     }
     box.innerHTML = items.map(function (item) {
-      const threshold = item.alert_enabled ? (item.alert_after_seconds + " 绉掑憡璀?) : "褰撳墠涓嶈Е鍙戝憡璀?;
-      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">杩炵画 ' + item.min_consecutive_frames + ' 甯?/span></div><p class="stack-item-meta">' + item.description + " 路 " + threshold + "</p></article>";
+      const threshold = item.alert_enabled ? (item.alert_after_seconds + " 秒") : "未启用告警";
+      return '<article class="stack-item"><div class="stack-item-head"><p class="stack-item-title">' + item.behavior_name + '</p><span class="mini-tag">连续 ' + item.min_consecutive_frames + ' 帧</span></div><p class="stack-item-meta">' + item.description + " · 阈值 " + threshold + "</p></article>";
     }).join("");
   }
 
   function renderStats(data) {
     const focus = data.focus_score || {};
-    const level = focus.level || "浣?;
-    const sourceLabel = data.source_label || "瀹炴椂鐩戞帶";
+    const level = focus.level || "一般";
+    const sourceLabel = data.source_label || "摄像头";
     const cameraStatus = data.camera_status || {};
     const alertCount = (data.alerts || []).length;
 
@@ -105,10 +105,10 @@
     setText("heroFocusHint", focus.summary_text || "--");
     setText("focusRuleText", focus.rule_text || "--");
     setText("focusLimitText", focus.limits_text || "--");
-    setText("lastUpdated", "鏈€杩戞洿鏂帮細" + F.formatTime(data.last_updated));
-    setText("cameraStatusText", cameraStatus.message || "绯荤粺浼氬湪鎽勫儚澶村紓甯告椂鑷姩鍒囨崲涓哄崰浣嶇敾闈€?);
-    setText("focusLiveBadge", level === "楂? ? "璇惧爞鐘舵€佺ǔ瀹? : "璇惧爞娉㈠姩澧炲姞");
-    setText("alertCountBadge", "鍛婅 " + alertCount);
+    setText("lastUpdated", "最近更新 " + F.formatTime(data.last_updated));
+    setText("cameraStatusText", cameraStatus.message || "系统将持续检测摄像头状态，并在异常时给出提醒。");
+    setText("focusLiveBadge", level === "良好" ? "专注状态稳定" : "需要继续关注");
+    setText("alertCountBadge", "告警数 " + alertCount);
 
     const levelEl = document.getElementById("focusLevel");
     if (levelEl) {
@@ -117,9 +117,9 @@
     }
 
     if (cameraStatus.status === "degraded") {
-      State.setStatusBar("monitorStatusBar", cameraStatus.message || "鎽勫儚澶村綋鍓嶄笉鍙敤锛岀郴缁熷凡鍒囨崲涓哄崰浣嶇敾闈€?, "warning");
+      State.setStatusBar("monitorStatusBar", cameraStatus.message || "摄像头状态异常，系统已提示你检查输入源。", "warning");
     } else {
-      State.setStatusBar("monitorStatusBar", "瀹炴椂鐩戞祴姝ｅ父杩愯涓紝鐢婚潰銆佺粺璁″拰蹇収璇佹嵁淇濇寔鍚屾銆?, "success");
+      State.setStatusBar("monitorStatusBar", "实时监测运行中，画面与行为统计会持续刷新。", "success");
     }
 
     setText("statLowHead", data.low_head || 0);
@@ -156,14 +156,14 @@
       try {
         await switchToCamera();
       } catch (error) {
-        State.setStatusBar("monitorStatusBar", error.message || "鍒囨崲澶辫触", "warning");
+        State.setStatusBar("monitorStatusBar", error.message || "切换摄像头失败", "warning");
       }
     });
   }
 
   const task = State.createPollingTask(refresh, 1800, {
     onError: function (error) {
-      State.setStatusBar("monitorStatusBar", error.message || "瀹炴椂鐩戞祴鏁版嵁鍔犺浇澶辫触锛岃绋嶅悗閲嶈瘯銆?, "warning");
+      State.setStatusBar("monitorStatusBar", error.message || "实时监测刷新失败，请稍后重试。", "warning");
     }
   });
   task.start();

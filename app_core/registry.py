@@ -63,6 +63,7 @@ def build_service_registry(app, context, helpers):
     runtime_config = context.runtime_config
     deps = {
         "AlertEvent": AlertEvent,
+        "ALLOWED_IMAGE_EXTENSIONS": set(runtime_config.allowed_image_extensions),
         "ALLOWED_VIDEO_EXTENSIONS": set(runtime_config.allowed_video_extensions),
         "AnalysisReport": AnalysisReport,
         "BEHAVIOR_DISPLAY_NAMES": BEHAVIOR_DISPLAY_NAMES,

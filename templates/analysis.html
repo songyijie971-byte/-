@@ -1,8 +1,8 @@
 {% extends "layout/base.html" %}
 
-{% block title %}绂荤嚎鍒嗘瀽{% endblock %}
-{% block page_title %}绂荤嚎瑙嗛鍒嗘瀽{% endblock %}
-{% block page_subtitle %}鎶婁笂浼犮€佸鐞嗚繘搴﹀拰鎶ュ憡鐢熸垚鍘嬬缉鎴愪竴鏉℃竻鏅扮殑浠诲姟娴佺▼{% endblock %}
+{% block title %}视频与图片分析{% endblock %}
+{% block page_title %}视频与图片分析{% endblock %}
+{% block page_subtitle %}上传课堂视频生成时序报告，或上传单张图片快速验证模型静态识别结果{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/analysis.css') }}">
@@ -11,114 +11,208 @@
 {% block content %}
 {% if request.args.get("notice") == "no_camera_permission" %}
 <div class="alert-strip warning" style="margin-bottom:12px;">
-  褰撳墠璐﹀彿娌℃湁鎽勫儚澶存潈闄愶紝宸蹭负浣犺烦杞埌鈥滅绾垮垎鏋愨€濄€傚闇€鎵撳紑瀹炴椂鐩戞祴锛岃鐢?admin/teacher 璐﹀彿鐧诲綍锛屾垨璁剧疆鐜鍙橀噺 ALLOW_USER_CAMERA=1锛堜粎婕旂ず鐜寤鸿锛夈€?</div>
+  当前账户没有实时摄像头访问权限，因此已为你保留离线视频分析入口。如果需要开启实时监测，请使用 admin 或 teacher 账户登录，或检查环境变量 `ALLOW_USER_CAMERA=1`。
+</div>
 {% endif %}
 <section class="analysis-stage glass-card">
   <div class="analysis-stage-copy">
-    <p class="page-hero-kicker">ASYNC REVIEW PIPELINE</p>
-    <h3 class="analysis-stage-title">涓婁紶涓嶆槸缁撴潫锛屼换鍔℃祦鎵嶆槸灞曠ず閲嶇偣銆?/h3>
-    <p class="page-hero-text">杩欎竴椤靛己璋冣€滄祦绋嬫劅鈥濄€傝棰戜笂浼犲悗锛岀郴缁熻嚜鍔ㄥ垱寤轰换鍔°€佸洖浼犺繘搴︺€佺敓鎴愭姤鍛婏紝骞朵繚鐣欏巻鍙茬粨鏋滅敤浜庡鐩樺拰绛旇京灞曠ず銆?/p>
+    <p class="page-hero-kicker">OFFLINE ANALYSIS WORKBENCH</p>
+    <h3 class="analysis-stage-title">把视频交给后台生成结构化报告，或用单张图片快速验证课堂行为识别效果</h3>
+    <p class="page-hero-text">视频模式保留异步处理、进度跟踪和分析报告；图片模式则即时返回当前画面的检测框、行为类别和单帧评分，适合答辩演示模型静态识别能力。</p>
     <div class="analysis-flow-ribbon">
-      <span class="flow-pill">01 涓婁紶鏂囦欢</span>
-      <span class="flow-pill">02 鎶藉抚鍒嗘瀽</span>
-      <span class="flow-pill">03 鐢熸垚鎶ュ憡</span>
+      <span class="flow-pill">01 上传素材</span>
+      <span class="flow-pill">02 视频异步 / 图片单帧分析</span>
+      <span class="flow-pill">03 输出结果与证据</span>
     </div>
   </div>
   <div class="analysis-stage-side">
     <article class="hero-stat-card">
-      <p class="hero-stat-label">褰撳墠杩涘害</p>
+      <p class="hero-stat-label">视频任务进度</p>
       <p id="heroAnalysisProgress" class="hero-stat-value">0%</p>
-      <p class="hero-stat-hint">杩涘害鏉°€佸抚澶勭悊鏁板拰鎶ュ憡鐘舵€佷細鍚屾鍒锋柊銆?/p>
+      <p class="hero-stat-hint">这里持续显示视频任务的后台处理进度。</p>
     </article>
     <article class="hero-stat-card hero-stat-card-accent">
-      <p class="hero-stat-label">鎶ュ憡鐘舵€?/p>
-      <p id="heroReportState" class="hero-stat-value">寰呯敓鎴?/p>
-      <p class="hero-stat-hint">鎶ュ憡瀹屾垚鍚庡彲鐩存帴杩涘叆姝ｅ紡鍒嗘瀽鎶ュ憡椤甸潰銆?/p>
+      <p class="hero-stat-label">视频报告状态</p>
+      <p id="heroReportState" class="hero-stat-value">等待生成</p>
+      <p class="hero-stat-hint">图片模式即时返回结果，不会生成连续帧报告。</p>
     </article>
   </div>
 </section>
 
 <section class="analysis-workbench">
   <section class="glass-card upload-command-card">
-    <div class="section-head">
-      <div>
-        <h3 class="panel-title">涓婁紶骞跺垱寤哄垎鏋愪换鍔?/h3>
-        <p class="panel-subtitle">鏀寔 mp4 / avi / mov / mkv / webm銆備笂浼犲悗鑷姩杩涘叆浠诲姟闃熷垪銆?/p>
+    <div class="section-head upload-section-head">
+      <div class="upload-heading">
+        <h3 class="panel-title">上传待分析素材</h3>
+        <p class="panel-subtitle">视频模式用于完整时序分析和报告生成；图片模式用于展示单帧检测、行为映射和静态结果预览。</p>
+      </div>
+      <div class="upload-meta">
+        <span class="upload-meta-label">STEP A</span>
+        <strong>视频做完整报告，图片做即时验证</strong>
       </div>
     </div>
+
     <form id="uploadForm" class="upload-form">
-      <input id="videoFileInput" class="file-input" name="video" type="file" accept="video/mp4,video/avi,video/mov,video/mkv,video/webm">
-      <div class="inline-actions">
-        <button class="btn primary" id="uploadButton" type="submit">涓婁紶骞跺垎鏋?/button>
-        <button class="btn ghost" id="reportButton" type="button" disabled>鏌ョ湅鎶ュ憡</button>
-        <a class="btn ghost" href="/api/health" target="_blank">鍋ュ悍妫€鏌?/a>
+      <div class="file-picker-card">
+        <label class="upload-field-label" for="videoFileInput">视频文件（异步报告）</label>
+        <input id="videoFileInput" class="file-input" name="video" type="file" accept="video/mp4,video/avi,video/mov,video/mkv,video/webm">
+        <p class="upload-field-hint">建议上传课后录播或课堂回放文件，系统会自动进入后台队列处理并生成分析报告。</p>
+      </div>
+      <div class="upload-actions-block">
+        <div class="inline-actions primary-actions">
+          <button class="btn primary" id="uploadButton" type="submit">开始上传视频</button>
+          <button class="btn ghost" id="reportButton" type="button" disabled>打开视频报告</button>
+          <a class="btn ghost" href="/api/health" target="_blank">查看健康状态</a>
+        </div>
+        <div class="console-chip-row console-chip-row-soft">
+          <span class="console-chip">上传成功后自动排队</span>
+          <span class="console-chip">后台持续处理</span>
+          <span class="console-chip">完成后立即可看报告</span>
+        </div>
       </div>
     </form>
+
     <div class="pipeline-console">
       <div id="analysisStatusBar" class="alert-strip hidden"></div>
-      <div class="console-chip-row">
-        <span class="console-chip">浠诲姟宸插垱寤哄悗鑷姩杞</span>
-        <span class="console-chip">鍚屼竴瑙勫垯鍙ｅ緞</span>
-        <span class="console-chip">鎶ュ憡鍙洿鎺ュ睍绀?/span>
-      </div>
     </div>
+
     <div class="progress-command">
       <div class="progress-copy">
-        <p id="analysisMessage" class="panel-subtitle">璇烽€夋嫨瑙嗛鏂囦欢寮€濮嬪垎鏋愩€?/p>
+        <span class="progress-kicker">VIDEO TASK STATUS</span>
+        <p id="analysisMessage" class="panel-subtitle">请选择一个视频文件开始分析。</p>
         <p id="analysisProgressText" class="panel-subtitle">--</p>
       </div>
       <div class="progress-track progress-track-strong"><span id="analysisProgressBar"></span></div>
     </div>
 
     <div class="stage-board">
-      <article class="stage-card"><span class="mini-tag">闃舵 1</span><strong>鏂囦欢涓婁紶</strong><p>鍒涘缓浠诲姟璁板綍锛屼繚瀛樺師濮嬭棰戯紝寤虹珛鍙拷韪殑鍒嗘瀽閾捐矾銆?/p></article>
-      <article class="stage-card"><span class="mini-tag">闃舵 2</span><strong>鎶藉抚鍒嗘瀽</strong><p>鎸夊浐瀹氭闀块噰鏍疯棰戝抚锛屾墽琛岃涓烘娴嬩笌鏃跺簭瑙勫垯鍒嗘瀽銆?/p></article>
-      <article class="stage-card"><span class="mini-tag">闃舵 3</span><strong>鎶ュ憡鐢熸垚</strong><p>姹囨€婚闄╃瓑绾с€佽涓虹粺璁°€佹埅鍥捐瘉鎹€佹椂闂寸嚎涓庢暀甯堝缓璁€?/p></article>
+      <article class="stage-card"><span class="mini-tag">阶段 1</span><strong>接收视频</strong><p>校验文件、记录任务信息，并把视频送入后台处理队列。</p></article>
+      <article class="stage-card"><span class="mini-tag">阶段 2</span><strong>执行分析</strong><p>逐帧抽样并识别课堂行为，累积专注度与告警证据。</p></article>
+      <article class="stage-card"><span class="mini-tag">阶段 3</span><strong>产出报告</strong><p>整理统计结果、关键截图和建议内容，生成可浏览的课堂报告。</p></article>
     </div>
+
+    <section class="single-frame-panel">
+      <div class="section-head image-section-head">
+        <div class="upload-heading">
+          <h3 class="panel-title">上传单张图片</h3>
+          <p class="panel-subtitle">图片模式会直接给出当前画面的检测框、行为类别、单帧评分和结果图，适合论文截图和答辩演示。</p>
+        </div>
+        <div class="upload-meta">
+          <span class="upload-meta-label">STEP B</span>
+          <strong>单帧识别，不触发时序告警</strong>
+        </div>
+      </div>
+
+      <form id="imageUploadForm" class="upload-form image-upload-form">
+        <div class="file-picker-card">
+          <label class="upload-field-label" for="imageFileInput">图片文件（即时分析）</label>
+          <input id="imageFileInput" class="file-input" name="image" type="file" accept="image/jpeg,image/png,image/bmp,image/webp">
+          <p class="upload-field-hint">支持 jpg、jpeg、png、bmp、webp。该模式只分析当前一帧，不生成连续时长与风险报告。</p>
+        </div>
+        <div class="upload-actions-block">
+          <div class="inline-actions primary-actions">
+            <button class="btn primary" id="imageUploadButton" type="submit">开始分析图片</button>
+            <a id="imageSourceLink" class="btn ghost hidden" href="#" target="_blank">查看原图</a>
+          </div>
+        </div>
+      </form>
+
+      <div id="imageAnalysisStatusBar" class="alert-strip hidden"></div>
+
+      <div class="image-analysis-grid">
+        <article class="image-analysis-card">
+          <div class="section-head compact-section-head">
+            <div>
+              <h3 class="panel-title">图片结果预览</h3>
+              <p class="panel-subtitle">当前来源：<span id="imageSourceLabel">上传图片</span></p>
+            </div>
+          </div>
+          <img id="imageAnalysisPreview" class="image-analysis-preview hidden" alt="图片分析结果">
+          <p id="imageAnalysisHint" class="panel-subtitle">上传单张图片后，这里会展示带标注的结果图与单帧行为统计。</p>
+          <div class="mini-divider"></div>
+          <p id="imageAnalysisMessage" class="image-analysis-message">单帧图片分析结果会显示在这里</p>
+          <p id="imageAnalysisMeta" class="image-analysis-meta">支持 jpg、jpeg、png、bmp、webp</p>
+          <div class="quick-points">
+            <article class="quick-point"><span>单帧评分</span><strong id="imageFocusScore">--</strong></article>
+            <article class="quick-point"><span>行为类型</span><strong id="imageBehaviorCount">--</strong></article>
+            <article class="quick-point"><span>检测目标</span><strong id="imageDetectionCount">--</strong></article>
+            <article class="quick-point"><span>分析时间</span><strong id="imageAnalyzedAt">--</strong></article>
+          </div>
+        </article>
+
+        <article class="image-analysis-card">
+          <div class="image-detail-section">
+            <div class="section-head compact-section-head">
+              <div>
+                <h3 class="panel-title">行为映射结果</h3>
+                <p class="panel-subtitle">这里只展示当前画面能映射出的课堂行为类别。</p>
+              </div>
+            </div>
+            <div id="imageBehaviorList" class="image-detail-list">
+              <p class="empty-text">暂无图片分析结果</p>
+            </div>
+          </div>
+
+          <div class="mini-divider"></div>
+
+          <div class="image-detail-section">
+            <div class="section-head compact-section-head">
+              <div>
+                <h3 class="panel-title">检测框摘要</h3>
+                <p class="panel-subtitle">展示模型输出的类别、置信度和边界框信息。</p>
+              </div>
+            </div>
+            <div id="imageDetectionList" class="image-detail-list">
+              <p class="empty-text">暂无检测框</p>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
   </section>
 
   <section class="glass-card current-job-card">
     <div class="section-head">
       <div>
-        <h3 class="panel-title">褰撳墠浠诲姟棰勮</h3>
-        <p class="panel-subtitle">褰撳墠杈撳叆婧愶細<span id="sourceLabel">鎴戠殑涓婁紶鍒嗘瀽</span></p>
+        <h3 class="panel-title">当前视频任务预览</h3>
+        <p class="panel-subtitle">当前来源：<span id="sourceLabel">上传视频</span></p>
       </div>
     </div>
     <video id="analysisPreview" class="video-frame hidden" controls preload="metadata" playsinline>
       <source id="analysisPreviewSource" src="" type="video/mp4">
     </video>
-    <p id="previewHint" class="panel-subtitle">涓婁紶鍚庡皢鍦ㄦ澶勯瑙堝綋鍓嶅垎鏋愮殑瑙嗛鏂囦欢銆?/p>
+    <p id="previewHint" class="panel-subtitle">上传成功后，这里会显示视频预览与文件信息。</p>
 
     <div class="mini-divider"></div>
     <div class="quick-points">
-      <article class="quick-point"><span>褰撳墠浠诲姟</span><strong id="currentJobStatus">鏆傛棤浠诲姟</strong></article>
-      <article class="quick-point"><span>鎶ュ憡鍏ュ彛</span><strong id="currentReportHint">灏氭湭鐢熸垚</strong></article>
-      <article class="quick-point"><span>浠诲姟鏃堕棿</span><strong id="currentJobTiming">--</strong></article>
-      <article class="quick-point"><span>澶辫触涓婁笅鏂?/span><strong id="currentJobError">--</strong></article>
+      <article class="quick-point"><span>任务状态</span><strong id="currentJobStatus">暂无任务</strong></article>
+      <article class="quick-point"><span>报告结果</span><strong id="currentReportHint">等待生成</strong></article>
+      <article class="quick-point"><span>时间节点</span><strong id="currentJobTiming">--</strong></article>
+      <article class="quick-point"><span>异常信息</span><strong id="currentJobError">--</strong></article>
     </div>
   </section>
 </section>
 
 <div class="grid-main">
   <section class="glass-card insight-panel insight-panel-warm">
-    <div class="section-head"><div><h3 class="panel-title">鎴戠殑鍘嗗彶浠诲姟</h3><p class="panel-subtitle">鎶婁笂浼犲垎鏋愪粠涓€娆℃€ф搷浣滄彁鍗囦负鍙洖婧€佸彲瀵规瘮銆佸彲澶嶇敤鐨勪换鍔＄鐞嗐€?/p></div></div>
+    <div class="section-head"><div><h3 class="panel-title">最近视频上传记录</h3><p class="panel-subtitle">展示你的最近视频任务与处理状态，方便回看每次提交的进展。</p></div></div>
     <div class="panel-chip-row">
-      <span class="panel-chip">淇濈暀澶氭鍒嗘瀽缁撴灉</span>
-      <span class="panel-chip">鏀寔鍥炴函涓庡姣斿睍绀?/span>
+      <span class="panel-chip">展示最近几次视频上传</span>
+      <span class="panel-chip">包含失败原因</span>
     </div>
-    <div id="jobList" class="stack-list"><p class="empty-text">鏆傛棤鍘嗗彶浠诲姟</p></div>
+    <div id="jobList" class="stack-list"><p class="empty-text">暂无上传记录</p></div>
   </section>
   <section class="glass-card insight-panel insight-panel-cool">
-    <div class="section-head"><div><h3 class="panel-title">绯荤粺鑳藉姏璇存槑</h3><p class="panel-subtitle">杩欎竴鍧楅€傚悎鍦ㄧ瓟杈╂椂璇存槑宸ョ▼瀹屾暣搴︺€?/p></div></div>
+    <div class="section-head"><div><h3 class="panel-title">如何讲解两种模式</h3><p class="panel-subtitle">这一块适合在答辩时说明系统同时覆盖“完整时序分析”和“静态图像验证”两条链路。</p></div></div>
     <div class="panel-chip-row">
-      <span class="panel-chip">寮傛澶勭悊</span>
-      <span class="panel-chip">缁熶竴瑙勫垯</span>
-      <span class="panel-chip">鎶ュ憡澶嶇敤</span>
+      <span class="panel-chip">视频用于时序规则</span>
+      <span class="panel-chip">图片用于模型静态验证</span>
+      <span class="panel-chip">两者共用同一识别模型</span>
     </div>
     <div class="feature-grid">
-      <article class="feature-card"><h4>寮傛浠诲姟澶勭悊</h4><p>涓婁紶鍚庣敱鍚庡彴绾跨▼鑷姩澶勭悊锛屽墠绔€氳繃杞鎸佺画灞曠ず浠诲姟杩涘害銆?/p></article>
-      <article class="feature-card"><h4>缁熶竴瑙勫垯鍙ｅ緞</h4><p>绂荤嚎鍒嗘瀽娌跨敤涓庡疄鏃剁洃娴嬬浉鍚岀殑琛屼负瑙勫垯锛屼繚璇佹姤鍛婄粨鏋滆〃杈句竴鑷淬€?/p></article>
-      <article class="feature-card"><h4>鎶ュ憡鍙鐢?/h4><p>鎶ュ憡椤甸潰鍙洿鎺ヤ綔涓虹瓟杈╁睍绀洪〉涓庤鏂囨埅鍥剧礌鏉愶紝鍑忓皯閲嶅鏁寸悊鎴愭湰銆?/p></article>
+      <article class="feature-card"><h4>视频模式</h4><p>保留异步任务、逐帧抽样、连续帧阈值、时长告警和结构化报告，适合完整课堂评估。</p></article>
+      <article class="feature-card"><h4>图片模式</h4><p>直接展示单帧检测框与行为映射结果，适合说明模型在静态截图上的可解释识别效果。</p></article>
+      <article class="feature-card"><h4>答辩表达</h4><p>可以说明两种模式共用同一检测模型与行为映射逻辑，只是在“是否依赖时间序列”这一层做了区分。</p></article>
     </div>
   </section>
 </div>

@@ -73,6 +73,19 @@
     return ensureOk(response, "视频上传失败");
   }
 
+  async function uploadImage(file) {
+    const csrfToken = readCookie("csrf_token");
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await fetch("/api/analyze_image", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: csrfToken ? { "X-CSRF-Token": csrfToken } : {},
+      body: formData
+    });
+    return ensureOk(response, "图片分析失败");
+  }
+
   async function deleteJson(url) {
     const csrfToken = readCookie("csrf_token");
     const response = await fetch(url, {
@@ -87,6 +100,7 @@
     ApiError: ApiError,
     getJson: getJson,
     postJson: postJson,
+    uploadImage: uploadImage,
     uploadVideo: uploadVideo,
     deleteJson: deleteJson
   };

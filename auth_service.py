@@ -1,3 +1,4 @@
+import os
 from functools import wraps
 import threading
 import time
@@ -74,13 +75,20 @@ def build_auth_services(deps):
     check_password_hash = deps["check_password_hash"]
 
     login_rate_limiter = _SlidingWindowRateLimiter(limit=10, window_seconds=10 * 60)
+    trust_x_forwarded_for = os.getenv("TRUST_X_FORWARDED_FOR", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
 
     def _client_ip():
-        forwarded = request.headers.get("X-Forwarded-For", "")
-        if forwarded:
-            first = forwarded.split(",", 1)[0].strip()
-            if first:
-                return first
+        if trust_x_forwarded_for:
+            forwarded = request.headers.get("X-Forwarded-For", "")
+            if forwarded:
+                first = forwarded.split(",", 1)[0].strip()
+                if first:
+                    return first
         return request.remote_addr or "unknown"
 
     def _rate_limit_key(account: str) -> str:

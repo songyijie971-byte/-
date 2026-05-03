@@ -1,8 +1,8 @@
 {% extends "layout/base.html" %}
 
-{% block title %}瀹炴椂鐩戞祴{% endblock %}
-{% block page_title %}瀹炴椂鐩戞祴{% endblock %}
-{% block page_subtitle %}鎶婂疄鏃剁敾闈€侀闄╃瓑绾у拰瑙勫垯鍛戒腑鏀惧埌鍚屼竴鏉¤绾夸笂{% endblock %}
+{% block title %}实时监测{% endblock %}
+{% block page_title %}实时监测{% endblock %}
+{% block page_subtitle %}连接摄像头并持续观察课堂状态，实时反馈专注度与风险行为{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/monitor.css') }}">
@@ -12,24 +12,24 @@
 <section class="monitor-stage glass-card">
   <div class="monitor-stage-copy">
     <p class="page-hero-kicker">LIVE OBSERVATION LAYER</p>
-    <h3 class="monitor-stage-title">绯荤粺姝ｅ湪鎰熺煡璇惧爞锛屼笉鍙槸鎾斁鎽勫儚澶淬€?/h3>
-    <p class="page-hero-text">杩欎竴椤靛己璋冣€滃疄鏃舵劅鈥濆拰鈥滆В閲婂姏鈥濄€傚乏杈规槸褰撳墠璇惧爞鐢婚潰锛屽彸杈瑰悓姝ョ粰鍑洪闄╁垽鏂€佹潵婧愮姸鎬佸拰瑙勫垯鎽樿銆?/p>
+    <h3 class="monitor-stage-title">在同一块大屏中同时查看视频画面、专注度信号与课堂风险提醒</h3>
+    <p class="page-hero-text">页面会持续轮询系统状态，自动更新课堂事件、行为排行、专注度评分和最新截图，适合教师在授课或巡课时直接使用。</p>
     <div class="monitor-stage-actions">
-      <button id="switchCameraButton" class="btn primary" type="button">鍒囧洖鎽勫儚澶?/button>
-      <a class="btn ghost" href="/analysis-view">鍓嶅線绂荤嚎鍒嗘瀽</a>
-      <a class="btn ghost" href="/report/latest" target="_blank">鎵撳紑鏈€鏂版姤鍛?/a>
+      <button id="switchCameraButton" class="btn primary" type="button">切换到摄像头</button>
+      <a class="btn ghost" href="/analysis-view">转到视频分析</a>
+      <a class="btn ghost" href="/report/latest" target="_blank">查看最新报告</a>
     </div>
   </div>
   <div class="monitor-stage-aside">
     <article class="hero-stat-card">
-      <p class="hero-stat-label">褰撳墠鏉ユ簮</p>
-      <p id="heroSourceLabel" class="hero-stat-value">瀹炴椂鎽勫儚澶?/p>
-      <p class="hero-stat-hint">褰撳墠杈撳叆婧愪細涓庝笅鏂硅棰戞祦鍜岀姸鎬佺粺璁′繚鎸佸悓姝ャ€?/p>
+      <p class="hero-stat-label">当前信号源</p>
+      <p id="heroSourceLabel" class="hero-stat-value">摄像头</p>
+      <p class="hero-stat-hint">显示当前系统使用的输入源，便于确认现场数据是否正常接入。</p>
     </article>
     <article class="hero-stat-card hero-stat-card-accent">
       <p class="hero-stat-label">Focus Signal</p>
-      <p id="heroFocusValue" class="hero-stat-value">楂?/p>
-      <p id="heroFocusHint" class="hero-stat-hint">姝ｅ湪鍔犺浇璇惧爞鐘舵€佹憳瑕併€?/p>
+      <p id="heroFocusValue" class="hero-stat-value">良好</p>
+      <p id="heroFocusHint" class="hero-stat-hint">专注度摘要会随状态自动刷新。</p>
     </article>
   </div>
 </section>
@@ -41,8 +41,8 @@
 <section class="monitor-command-grid">
   <section class="glass-card live-screen-card">
     <div class="panel-head">
-      <h3 class="panel-title">瀹炴椂璇惧爞鐢婚潰</h3>
-      <p class="panel-subtitle">褰撳墠杈撳叆婧愶細<span id="sourceLabel">瀹炴椂鎽勫儚澶?/span></p>
+      <h3 class="panel-title">实时视频画面</h3>
+      <p class="panel-subtitle">当前输入源：<span id="sourceLabel">摄像头</span></p>
     </div>
     <div class="live-screen-frame">
       <div class="live-screen-scan"></div>
@@ -52,31 +52,31 @@
       <img id="videoFeed" class="video-frame video-frame-tall" src="/video_feed" alt="live feed">
     </div>
     <div class="live-screen-footer">
-      <p id="cameraStatusText" class="panel-subtitle">绯荤粺浼氬湪鎽勫儚澶村紓甯告椂鑷姩鍒囨崲涓哄崰浣嶇敾闈€?/p>
+      <p id="cameraStatusText" class="panel-subtitle">系统将持续检测摄像头状态，并在异常时给出提醒。</p>
       <div class="monitor-signal-tags">
-        <span id="focusLiveBadge" class="mini-tag">璇惧爞鐘舵€佺ǔ瀹?/span>
-        <span id="alertCountBadge" class="mini-tag subtle-tag">鍛婅 0</span>
+        <span id="focusLiveBadge" class="mini-tag">专注状态稳定</span>
+        <span id="alertCountBadge" class="mini-tag subtle-tag">告警数 0</span>
       </div>
     </div>
     <div class="live-legend">
-      <span>鐢婚潰灞傦細璇惧爞婧愯棰?/span>
-      <span>鍒ゆ柇灞傦細瑙勫垯涓庢椂搴忕姸鎬?/span>
-      <span>璇佹嵁灞傦細蹇収涓庡憡璀︽椂闂寸嚎</span>
+      <span>画面覆盖用于行为识别与人数统计</span>
+      <span>黄色提示用于重点关注的课堂信号</span>
+      <span>系统会结合时间与频次综合判断风险</span>
     </div>
   </section>
 
   <section class="glass-card live-insight-rail">
     <div class="rail-section">
-      <h3 class="panel-title">璇惧爞鐘舵€佹瑙?/h3>
+      <h3 class="panel-title">专注度概览</h3>
       <div class="grid-cols-2 compact">
         <article class="metric-card emphasis-card">
-          <p class="metric-label">璇惧爞涓撴敞搴﹁瘎鍒?/p>
+          <p class="metric-label">专注度评分</p>
           <p class="metric-value" id="focusScore">0</p>
           <p class="metric-hint" id="focusSummary">--</p>
         </article>
         <article class="metric-card">
-          <p class="metric-label">椋庨櫓绛夌骇</p>
-          <p class="metric-value"><span id="focusLevel" class="status-pill high">楂?/span></p>
+          <p class="metric-label">状态等级</p>
+          <p class="metric-value"><span id="focusLevel" class="status-pill high">良好</span></p>
           <p class="metric-hint" id="lastUpdated">--</p>
         </article>
       </div>
@@ -85,42 +85,42 @@
     <div class="rail-section signal-rules">
       <div class="quick-points quick-points-single">
         <article class="quick-point">
-          <span>瑙勫垯鍏紡</span>
+          <span>评分规则</span>
           <strong id="focusRuleText">--</strong>
         </article>
         <article class="quick-point">
-          <span>璇勫垎璇存槑</span>
+          <span>结果说明</span>
           <strong id="focusLimitText">--</strong>
         </article>
       </div>
     </div>
 
     <div class="rail-section perception-wall">
-      <h3 class="panel-title">绯荤粺姝ｅ湪鎰熺煡浠€涔?/h3>
+      <h3 class="panel-title">行为感知面板</h3>
       <div class="perception-grid">
         <article class="perception-card">
-          <span>浣庡ご浜烘暟</span>
+          <span>低头</span>
           <strong id="statLowHead">0</strong>
           <small id="durationLowHead">0.0s</small>
         </article>
         <article class="perception-card">
-          <span>鐫¤浜烘暟</span>
+          <span>睡觉</span>
           <strong id="statSleep">0</strong>
           <small id="durationSleep">0.0s</small>
         </article>
         <article class="perception-card">
-          <span>涓炬墜浜烘暟</span>
+          <span>举手</span>
           <strong id="statHandRaise">0</strong>
           <small id="durationHandRaise">0.0s</small>
         </article>
         <article class="perception-card">
-          <span>杞ご浜よ皥</span>
+          <span>转头交流</span>
           <strong id="statTurnTalk">0</strong>
           <small id="durationTurnTalk">0.0s</small>
         </article>
       </div>
       <div class="perception-footer">
-        <span>杩欑粍鏁板瓧鐢ㄤ簬瑙ｉ噴绯荤粺涓嶆槸鈥滃彧浼氱敾妗嗏€濓紝鑰屾槸鍦ㄦ寔缁劅鐭ヨ鍫傚姩鎬併€?/span>
+        <span>统计卡片展示的是识别次数与持续时长，帮助你快速判断课堂是否存在异常波动。</span>
       </div>
     </div>
   </section>
@@ -128,35 +128,35 @@
 
 <div class="grid-main monitor-bottom-grid">
   <section class="glass-card insight-panel insight-panel-warm">
-    <div class="section-head"><div><h3 class="panel-title">寮傚父琛屼负鎺掕</h3><p class="panel-subtitle">鎸夎繎鏈熷憡璀﹂娆℃眹鎬伙紝蹇€熸寚鍑鸿鍫備富瑕侀闄╂潵婧愩€?/p></div></div>
+    <div class="section-head"><div><h3 class="panel-title">行为排行</h3><p class="panel-subtitle">按最近采样窗口统计高频行为，便于快速定位最值得关注的课堂现象。</p></div></div>
     <div class="panel-chip-row">
-      <span class="panel-chip">棰戞浠ｈ〃涓昏椋庨櫓婧?/span>
-      <span class="panel-chip">閫傚悎閰嶅悎瀹炴椂鐢婚潰璇存槑</span>
+      <span class="panel-chip">频次越高越靠前</span>
+      <span class="panel-chip">用于把握课堂节奏</span>
     </div>
-    <div id="behaviorRanking" class="stack-list"><p class="empty-text">鏆傛棤鎺掕鏁版嵁</p></div>
+    <div id="behaviorRanking" class="stack-list"><p class="empty-text">暂无排行数据</p></div>
   </section>
   <section class="glass-card insight-panel insight-panel-cool">
-    <div class="section-head"><div><h3 class="panel-title">鏈€杩戝憡璀︽椂闂寸嚎</h3><p class="panel-subtitle">缁撳悎鏃堕棿銆佹寔缁椂闀垮拰娑夊強浜烘暟锛岀獊鍑轰簨浠惰В閲婂姏銆?/p></div></div>
+    <div class="section-head"><div><h3 class="panel-title">最新告警时间线</h3><p class="panel-subtitle">按时间倒序展示最近发生的课堂事件，方便现场回看和解释。</p></div></div>
     <div class="panel-chip-row">
-      <span class="panel-chip">鎸佺画鏃堕暱浣撶幇浜嬩欢寮哄害</span>
-      <span class="panel-chip">浜烘暟浣撶幇褰卞搷鑼冨洿</span>
+      <span class="panel-chip">包含时长与人数信息</span>
+      <span class="panel-chip">适合现场追踪变化</span>
     </div>
-    <div id="recentAlertsTimeline" class="stack-list"><p class="empty-text">鏆傛棤浜嬩欢</p></div>
+    <div id="recentAlertsTimeline" class="stack-list"><p class="empty-text">暂无告警数据</p></div>
   </section>
 </div>
 
 <div class="grid-main monitor-bottom-grid">
   <section class="glass-card">
-    <div class="section-head"><div><h3 class="panel-title">杩戜竴鍒嗛挓瓒嬪娍</h3><p class="panel-subtitle">灞曠ず鏈€杩戜竴娈垫椂闂村唴鐨勯闄╂尝鍔ㄥ揩鐓с€?/p></div></div>
-    <div id="trendChart" class="trend-bars"><p class="empty-text">鏆傛棤瓒嬪娍鏁版嵁</p></div>
+    <div class="section-head"><div><h3 class="panel-title">趋势分布</h3><p class="panel-subtitle">将行为信号映射为柱状趋势，帮助观察课堂状态是否稳定。</p></div></div>
+    <div id="trendChart" class="trend-bars"><p class="empty-text">暂无趋势数据</p></div>
   </section>
   <section class="glass-card">
-    <div class="section-head"><div><h3 class="panel-title">褰撳墠瑙勫垯鎽樿</h3><p class="panel-subtitle">寮鸿皟绯荤粺鍏峰鍙鐞嗐€佸彲閰嶇疆銆佸彲鎵╁睍鐨勫伐绋嬭兘鍔涖€?/p></div></div>
-    <div id="ruleSummary" class="stack-list"><p class="empty-text">姝ｅ湪鍔犺浇瑙勫垯鎽樿</p></div>
+    <div class="section-head"><div><h3 class="panel-title">规则摘要</h3><p class="panel-subtitle">展示当前启用的行为判定阈值，方便解释系统为什么会触发提醒。</p></div></div>
+    <div id="ruleSummary" class="stack-list"><p class="empty-text">暂无规则摘要</p></div>
   </section>
 </div>
 
-{% set title = "鏈€鏂板憡璀︽埅鍥? %}
+{% set title = "最新截图" %}
 {% set empty_id = "snapshotEmpty" %}
 {% set image_id = "snapshotImage" %}
 {% set meta_id = "snapshotMeta" %}

@@ -24,12 +24,46 @@ def register_config_routes(app, deps):
             runtime_profile_options=payload["runtime_profile_options"],
             selected_runtime_profile_key=payload["selected_runtime_profile_key"],
             selected_runtime_profile=payload["selected_runtime_profile"],
+            active_page="admin_rules",
         )
 
     @app.route("/evaluation")
     @login_required_page
     def evaluation_page():
-        return render_template("evaluation.html", evaluation=EXPERIMENT_OVERVIEW)
+        return render_template(
+            "evaluation.html",
+            evaluation=EXPERIMENT_OVERVIEW,
+            active_page="evaluation",
+        )
+
+    @app.route("/workflow")
+    @login_required_page
+    def workflow_page():
+        return render_template("workflow.html", active_page="workflow")
+
+    @app.route("/insights")
+    @login_required_page
+    def insights_page():
+        return render_template("insights.html", active_page="insights")
+
+    @app.route("/evidence")
+    @login_required_page
+    def evidence_page():
+        return render_template("evidence.html", active_page="evidence")
+
+    @app.route("/experiment-method")
+    @login_required_page
+    def experiment_method_page():
+        return render_template(
+            "experiment_method.html",
+            evaluation=EXPERIMENT_OVERVIEW,
+            active_page="experiment_method",
+        )
+
+    @app.route("/operations")
+    @login_required_page
+    def operations_page():
+        return render_template("operations.html", active_page="operations")
 
     @app.route("/api/health")
     def api_health():

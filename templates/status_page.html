@@ -49,7 +49,6 @@
     h1 {
       margin: 16px 0 10px;
       font-size: 38px;
-      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
     }
     .lead {
       margin: 0;
@@ -98,12 +97,12 @@
     <div class="eyebrow">SYSTEM STATUS</div>
     <h1>{{ title }}</h1>
     <p class="lead">{{ message }}</p>
-    <div class="meta">鐘舵€佺爜锛歿{ status_code }}</div>
+    <div class="meta">状态码：{{ status_code }}</div>
     <div class="actions">
       {% if action_href and action_label %}
       <a class="btn primary" href="{{ action_href }}">{{ action_label }}</a>
       {% endif %}
-      <a class="btn ghost" href="/api/health">鏌ョ湅鍋ュ悍妫€鏌?/a>
+      <a class="btn ghost" href="/api/health">查看健康检查</a>
     </div>
   </main>
 </body>

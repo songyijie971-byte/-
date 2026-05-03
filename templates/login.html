@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>鐢ㄦ埛鐧诲綍</title>
+  <title>账户登录</title>
   <style>
     :root {
       --bg:
@@ -52,7 +52,6 @@
       margin: 0;
       font-size: 38px;
       line-height: 1.2;
-      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
     }
     .hero p {
       margin: 14px 0 0;
@@ -100,7 +99,6 @@
     .form-card h2 {
       margin: 0;
       font-size: 32px;
-      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
     }
     .form-card .sub {
       margin: 10px 0 24px;
@@ -170,34 +168,34 @@
   <div class="shell">
     <section class="hero">
       <div>
-        <div class="badge">鏅烘収璇惧爞琛屼负璇嗗埆绯荤粺</div>
-        <h1>鐧诲綍鍚庣粺涓€绠＄悊涓婁紶浠诲姟銆佸垎鏋愭姤鍛婂拰璇惧爞琛屼负璁板綍</h1>
-        <p>绯荤粺鏀寔璐﹀彿闅旂銆佽棰戝垎鏋愩€佹姤鍛婄暀瀛樺拰瑙掕壊鏉冮檺鎺у埗銆傜鐞嗗憳涓庢暀甯堝彲浠ヨ繘鍏ュ疄鏃舵憚鍍忓ご鐩戞祴椤甸潰锛屾櫘閫氱敤鎴峰彲涓婁紶瑙嗛骞舵煡鐪嬭嚜宸辩殑鍒嗘瀽缁撴灉銆?/p>
+        <div class="badge">智慧课堂行为分析平台</div>
+        <h1>用更直观的方式掌握课堂专注度、行为波动与重点风险信号</h1>
+        <p>登录后即可进入统一工作台，查看实时监测、离线视频分析、历史记录与课堂报告。页面视觉已重新整理，适合直接演示。</p>
       </div>
       <div class="hero-grid">
         <div class="hero-card">
-          <strong>璐﹀彿褰掑睘娓呮櫚</strong>
-          <span>涓婁紶瑙嗛銆佸垎鏋愪换鍔°€佹姤鍛婅褰曞拰浜嬩欢鎴浘閮界粦瀹氬埌褰撳墠璐﹀彿锛屼簰涓嶄覆鏁版嵁銆?/span>
+          <strong>实时课堂观察</strong>
+          <span>适合课中巡查，持续刷新专注度评分与异常行为提醒。</span>
         </div>
         <div class="hero-card">
-          <strong>鎶ュ憡鍙鍑?/strong>
-          <span>鍒嗘瀽瀹屾垚鍚庡彲鐩存帴鏌ョ湅璇︾粏鎶ュ憡锛屽苟閫氳繃娴忚鍣ㄦ墦鍗板鍑轰负 PDF銆?/span>
+          <strong>离线视频分析</strong>
+          <span>上传录制视频后异步处理，生成可追溯的结构化分析报告。</span>
         </div>
         <div class="hero-card">
-          <strong>鏉冮檺鏇寸渷蹇?/strong>
-          <span>榛樿绠＄悊鍛樺凡鑷姩鍒涘缓锛涘鏋滃簱閲岃繕娌℃湁绠＄悊鍛橈紝棣栦釜娉ㄥ唽璐﹀彿涔熶細鑷姩鍗囦负绠＄悊鍛樸€?/span>
+          <strong>历史事件回溯</strong>
+          <span>支持查看近期行为趋势与关键截图，便于课后复盘。</span>
         </div>
         <div class="hero-card">
-          <strong>闆堕厤缃彲鐧诲綍</strong>
-          <span>榛樿绠＄悊鍛樿处鍙蜂负 <code>admin</code>锛岄粯璁ゅ瘑鐮佷负 <code>admin123456</code>锛屼笉闇€瑕侀澶栭厤缃幆澧冨彉閲忋€?/span>
+          <strong>默认演示账号</strong>
+          <span>管理员账号为 <code>admin</code>，默认密码为 <code>admin123456</code>。</span>
         </div>
       </div>
     </section>
 
     <section class="form-wrap">
       <div class="form-card">
-        <h2>璐﹀彿鐧诲綍</h2>
-        <div class="sub">鍙娇鐢ㄧ敤鎴峰悕鎴栭偖绠辩櫥褰曘€?/div>
+        <h2>账户登录</h2>
+        <div class="sub">请输入账户和密码，进入智慧课堂分析平台。</div>
 
         {% if error %}
         <div class="error">{{ error }}</div>
@@ -206,20 +204,20 @@
         <form method="post">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <div class="field">
-            <label for="account">鐢ㄦ埛鍚嶆垨閭</label>
-            <input id="account" name="account" type="text" placeholder="璇疯緭鍏ョ敤鎴峰悕鎴栭偖绠? required>
+            <label for="account">账户或邮箱</label>
+            <input id="account" name="account" type="text" placeholder="请输入用户名或邮箱" required>
           </div>
           <div class="field">
-            <label for="password">瀵嗙爜</label>
-            <input id="password" name="password" type="password" placeholder="璇疯緭鍏ュ瘑鐮? required>
+            <label for="password">密码</label>
+            <input id="password" name="password" type="password" placeholder="请输入密码" required>
           </div>
-          <button class="submit" type="submit">鐧诲綍绯荤粺</button>
+          <button class="submit" type="submit">登录系统</button>
         </form>
 
         <div class="actions">
-          杩樻病鏈夎处鍙凤紵<a href="/register">绔嬪嵆娉ㄥ唽</a><br>
-          榛樿绠＄悊鍛樺彲鐩存帴浣跨敤 <code>admin / admin123456</code> 鐧诲綍銆?br>
-          濡傛灉褰撳墠搴撻噷杩樻病鏈夌鐞嗗憳锛岄涓柊娉ㄥ唽璐﹀彿涔熶細鑷姩鎴愪负绠＄悊鍛樸€?        </div>
+          还没有账号？<a href="/register">立即注册</a><br>
+          演示环境可使用 <code>admin / admin123456</code> 快速登录。
+        </div>
       </div>
     </section>
   </div>

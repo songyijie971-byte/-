@@ -1,0 +1,95 @@
+{% extends "layout/base.html" %}
+
+{% block title %}实验方法{% endblock %}
+{% block page_title %}实验方法{% endblock %}
+{% block page_subtitle %}把实验设计、系统结构和答辩演示流程整理成论文支撑材料{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/showcase.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="showcase-hero glass-card">
+  <div>
+    <p class="showcase-kicker">EXPERIMENT METHOD</p>
+    <h3 class="showcase-title">实验不只展示指标，也说明样本、规则和系统边界。</h3>
+    <p class="showcase-text">{{ evaluation.dataset_note }}</p>
+  </div>
+  <div class="showcase-side">
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">模型方案</p>
+      <p class="metric-value" style="font-size: 20px; line-height: 1.35;">{{ evaluation.model_name }}</p>
+      <p class="metric-hint">用于课堂行为检测与可视化分析。</p>
+    </article>
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">实验输出</p>
+      <p class="metric-value">4 类</p>
+      <p class="metric-hint">指标、参数、性能、局限说明。</p>
+    </article>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">实验方法</h3>
+      <p class="panel-subtitle">对应论文中“实验设计”和“系统实现方法”的说明材料。</p>
+    </div>
+  </div>
+  <div class="showcase-band">
+    {% for item in evaluation.methodology %}
+    <article class="showcase-tile">
+      <p class="showcase-mini">METHOD {{ loop.index }}</p>
+      <h4>{{ item.title }}</h4>
+      <p>{{ item.body }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">工程结构亮点</h3>
+      <p class="panel-subtitle">用于说明系统不是单点脚本，而是按功能模块组织。</p>
+    </div>
+  </div>
+  <div class="process-grid">
+    {% for item in evaluation.architecture_points %}
+    <article class="process-step" data-step="{{ '%02d' % loop.index }}">
+      <p class="showcase-mini">ARCHITECTURE</p>
+      <h4>{{ item.title }}</h4>
+      <p>{{ item.body }}</p>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <h3 class="panel-title">答辩演示流程</h3>
+    <p class="panel-subtitle">按步骤演示可以减少跳页混乱，突出工作量闭环。</p>
+    <div class="showcase-list">
+      {% for item in evaluation.demo_flow %}
+      <div class="showcase-row">
+        <strong>步骤 {{ loop.index }}</strong>
+        <p>{{ item }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 class="panel-title">边界与后续优化</h3>
+    <p class="panel-subtitle">{{ evaluation.focus_disclaimer }}</p>
+    <div class="showcase-list">
+      {% for item in evaluation.limitations %}
+      <div class="showcase-row">
+        <strong>说明 {{ loop.index }}</strong>
+        <p>{{ item }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

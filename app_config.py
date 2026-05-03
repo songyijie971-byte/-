@@ -7,6 +7,7 @@ from typing import Dict, Tuple
 from database import build_database_url
 
 DEFAULT_ALLOWED_VIDEO_EXTENSIONS = (".mp4", ".avi", ".mov", ".mkv", ".webm")
+DEFAULT_ALLOWED_IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
 SUPPORTED_CAMERA_BACKENDS = {"auto", "default", "dshow", "msmf", "any"}
 
 
@@ -69,6 +70,7 @@ class RuntimeConfig:
     video_analysis_frame_stride: int
     upload_dir: str
     allowed_video_extensions: Tuple[str, ...]
+    allowed_image_extensions: Tuple[str, ...]
     flask_secret_key: str
     default_admin_password: str
     max_upload_size_mb: int
@@ -166,6 +168,7 @@ def load_runtime_config() -> RuntimeConfig:
         ),
         upload_dir=upload_dir,
         allowed_video_extensions=DEFAULT_ALLOWED_VIDEO_EXTENSIONS,
+        allowed_image_extensions=DEFAULT_ALLOWED_IMAGE_EXTENSIONS,
         flask_secret_key=load_flask_secret_key(upload_dir=upload_dir),
         default_admin_password=os.getenv("DEFAULT_ADMIN_PASSWORD", "admin123456"),
         max_upload_size_mb=max_upload_size_mb,
@@ -191,6 +194,7 @@ def build_runtime_summary(config: RuntimeConfig) -> Dict[str, object]:
         "inference_min_interval_seconds": config.inference_min_interval_seconds,
         "video_analysis_frame_stride": config.video_analysis_frame_stride,
         "upload_dir": config.upload_dir,
+        "allowed_image_extensions": list(config.allowed_image_extensions),
         "max_upload_size_mb": config.max_upload_size_mb,
         "job_executor_backend": config.job_executor_backend,
         "job_executor_process_workers": config.job_executor_process_workers,

@@ -4,8 +4,12 @@ import os
 import shutil
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from unittest import mock
+
+import numpy as np
 
 
 class RuntimeImprovementsTests(unittest.TestCase):
@@ -13,6 +17,9 @@ class RuntimeImprovementsTests(unittest.TestCase):
         self.temp_dir = tempfile.mkdtemp(prefix="classroom_runtime_")
         self.db_path = os.path.join(self.temp_dir, "runtime.db")
         self.upload_dir = os.path.join(self.temp_dir, "uploads")
+        self.model_path = os.path.join(self.temp_dir, "dummy-model.pt")
+        with open(self.model_path, "wb") as handle:
+            handle.write(b"model")
         self.old_env = {
             "DATABASE_URL": os.environ.get("DATABASE_URL"),
             "UPLOAD_DIR": os.environ.get("UPLOAD_DIR"),
@@ -29,6 +36,7 @@ class RuntimeImprovementsTests(unittest.TestCase):
         os.environ["DATABASE_URL"] = "sqlite:///{}".format(self.db_path)
         os.environ["UPLOAD_DIR"] = self.upload_dir
         os.environ["MAX_UPLOAD_SIZE_MB"] = "1"
+        os.environ["YOLO_MODEL_PATH"] = self.model_path
         os.environ.pop("DEFAULT_ADMIN_USERNAME", None)
         os.environ.pop("DEFAULT_ADMIN_EMAIL", None)
         os.environ.pop("DEFAULT_ADMIN_PASSWORD", None)
@@ -152,6 +160,52 @@ class RuntimeImprovementsTests(unittest.TestCase):
                     ),
                 )
             )
+
+    def make_test_png(self):
+        image = np.full((24, 24, 3), 180, dtype=np.uint8)
+        ok, encoded = self.webapp.DEPENDENCIES["analysis_application_service"].runtime.cv2.imencode(".png", image)
+        self.assertTrue(ok)
+        return io.BytesIO(encoded.tobytes())
+
+    def build_fake_image_model(self):
+        class _Scalar:
+            def __init__(self, value):
+                self.value = value
+
+            def item(self):
+                return self.value
+
+        class _TensorLike:
+            def __init__(self, values):
+                self.values = values
+
+            def tolist(self):
+                return list(self.values)
+
+        class _Box:
+            def __init__(self, cls_id, conf, bbox):
+                self.cls = _Scalar(cls_id)
+                self.conf = _Scalar(conf)
+                self.xyxy = [_TensorLike(bbox)]
+
+        class _Result:
+            def __init__(self, frame):
+                self.boxes = [
+                    _Box(0, 0.91, [4.0, 8.0, 48.0, 72.0]),
+                    _Box(4, 0.82, [54.0, 12.0, 96.0, 84.0]),
+                ]
+                self._frame = frame
+
+            def plot(self):
+                return self._frame
+
+        class _FakeModel:
+            names = {0: "low_head_candidate", 4: "hand_raise_candidate"}
+
+            def predict(self, frame, conf=0.35, iou=0.45, imgsz=416, verbose=False):
+                return [_Result(frame)]
+
+        return _FakeModel()
 
     def test_health_endpoint_reports_core_components(self):
         response = self.client.get("/api/health")
@@ -313,6 +367,72 @@ class RuntimeImprovementsTests(unittest.TestCase):
         self.assertEqual(payload["started_at"], "--")
         self.assertIn("等待后台分析", payload["status_detail"])
 
+    def test_image_analysis_endpoint_returns_single_frame_payload(self):
+        user_client = self.app.test_client()
+        self.register(user_client, "image_user", "image_user@example.com")
+        service = self.webapp.DEPENDENCIES["analysis_application_service"]
+        object.__setattr__(service.runtime, "get_model", lambda: self.build_fake_image_model())
+
+        response = user_client.post(
+            "/api/analyze_image",
+            headers=self.csrf_headers(user_client),
+            data={"image": (self.make_test_png(), "lesson.png")},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertTrue(payload["ok"])
+        self.assertTrue(payload["available"])
+        self.assertEqual(payload["analysis_type"], "image")
+        self.assertEqual(payload["source_mode"], "image")
+        self.assertEqual(payload["status"], "completed")
+        self.assertEqual(len(payload["behavior_items"]), 2)
+        self.assertEqual(payload["detections_count"], 2)
+        self.assertIn("/image-uploads/images/user_", payload["annotated_url"])
+
+    def test_image_analysis_rejects_non_image_extensions(self):
+        user_client = self.app.test_client()
+        self.register(user_client, "image_invalid_user", "image_invalid_user@example.com")
+
+        response = user_client.post(
+            "/api/analyze_image",
+            headers=self.csrf_headers(user_client),
+            data={"image": (io.BytesIO(b"not-an-image"), "lesson.mp4")},
+            content_type="multipart/form-data",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        payload = response.get_json()
+        self.assertFalse(payload["ok"])
+        self.assertIn("jpg", payload["message"])
+
+    def test_latest_image_analysis_endpoint_reuses_last_result(self):
+        user_client = self.app.test_client()
+        self.register(user_client, "image_latest_user", "image_latest_user@example.com")
+        service = self.webapp.DEPENDENCIES["analysis_application_service"]
+        object.__setattr__(service.runtime, "get_model", lambda: self.build_fake_image_model())
+
+        upload_response = user_client.post(
+            "/api/analyze_image",
+            headers=self.csrf_headers(user_client),
+            data={"image": (self.make_test_png(), "latest.png")},
+            content_type="multipart/form-data",
+        )
+        self.assertEqual(upload_response.status_code, 200)
+        upload_payload = upload_response.get_json()
+
+        latest_response = user_client.get("/api/image_analysis/latest")
+        self.assertEqual(latest_response.status_code, 200)
+        latest_payload = latest_response.get_json()
+        self.assertTrue(latest_payload["available"])
+        self.assertEqual(latest_payload["filename"], "latest.png")
+        self.assertEqual(latest_payload["annotated_url"], upload_payload["annotated_url"])
+        image_response = user_client.get(latest_payload["annotated_url"])
+        self.assertEqual(image_response.status_code, 200)
+        image_response.get_data()
+        image_response.close()
+
     def test_delete_job_is_idempotent_and_marks_deleted_at(self):
         user_client = self.app.test_client()
         self.register(user_client, "delete_user", "delete_user@example.com")
@@ -416,7 +536,7 @@ class RuntimeImprovementsTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn("旧规则版本", html)
-        self.assertIn("风险触发依据", html)
+        self.assertIn("规则快照", html)
 
     def test_camera_placeholder_frame_is_available_without_live_frame(self):
         with self.webapp.frame_lock:
@@ -427,6 +547,106 @@ class RuntimeImprovementsTests(unittest.TestCase):
         self.assertIsNotNone(frame)
         self.assertGreater(frame.shape[0], 0)
         self.assertGreater(frame.shape[1], 0)
+
+    def test_focus_score_is_consistent_between_web_and_worker_services(self):
+        import app_core.upload_analysis_worker as upload_analysis_worker
+
+        upload_analysis_worker = importlib.reload(upload_analysis_worker)
+        self.addCleanup(setattr, upload_analysis_worker, "_WORKER_SERVICE", None)
+
+        stable_counts = {
+            "low_head": 2,
+            "sleep": 1,
+            "turn_talk": 1,
+            "hand_raise": 3,
+        }
+
+        worker_service = upload_analysis_worker.get_worker_service()
+
+        self.assertEqual(
+            self.webapp.calculate_focus_score(stable_counts),
+            worker_service.runtime.calculate_focus_score(stable_counts),
+        )
+
+    def test_web_get_model_initializes_only_once_under_concurrency(self):
+        self.webapp.APP_CONTEXT.model = None
+        call_count = 0
+        call_lock = threading.Lock()
+
+        class FakeModel:
+            pass
+
+        def fake_yolo(*_args, **_kwargs):
+            nonlocal call_count
+            time.sleep(0.05)
+            with call_lock:
+                call_count += 1
+            return FakeModel()
+
+        results = []
+        errors = []
+
+        def load_model():
+            try:
+                results.append(self.webapp.get_model())
+            except Exception as exc:
+                errors.append(exc)
+
+        with mock.patch.object(self.webapp, "YOLO", side_effect=fake_yolo):
+            threads = [threading.Thread(target=load_model) for _ in range(6)]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+        self.assertEqual(errors, [])
+        self.assertEqual(call_count, 1)
+        self.assertEqual(len(results), 6)
+        self.assertTrue(all(result is results[0] for result in results))
+
+    def test_worker_get_model_initializes_only_once_under_concurrency(self):
+        import app_core.upload_analysis_worker as upload_analysis_worker
+
+        upload_analysis_worker = importlib.reload(upload_analysis_worker)
+        self.addCleanup(setattr, upload_analysis_worker, "_WORKER_SERVICE", None)
+
+        call_count = 0
+        call_lock = threading.Lock()
+
+        class FakeModel:
+            pass
+
+        def fake_yolo(*_args, **_kwargs):
+            nonlocal call_count
+            time.sleep(0.05)
+            with call_lock:
+                call_count += 1
+            return FakeModel()
+
+        results = []
+        errors = []
+
+        def load_model(worker_service):
+            try:
+                results.append(worker_service.runtime.get_model())
+            except Exception as exc:
+                errors.append(exc)
+
+        with mock.patch.object(upload_analysis_worker, "YOLO", side_effect=fake_yolo):
+            worker_service = upload_analysis_worker.get_worker_service()
+            threads = [
+                threading.Thread(target=load_model, args=(worker_service,))
+                for _ in range(6)
+            ]
+            for thread in threads:
+                thread.start()
+            for thread in threads:
+                thread.join()
+
+        self.assertEqual(errors, [])
+        self.assertEqual(call_count, 1)
+        self.assertEqual(len(results), 6)
+        self.assertTrue(all(result is results[0] for result in results))
 
 
 if __name__ == "__main__":

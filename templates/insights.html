@@ -1,0 +1,94 @@
+{% extends "layout/base.html" %}
+
+{% block title %}课堂洞察{% endblock %}
+{% block page_title %}课堂洞察{% endblock %}
+{% block page_subtitle %}把历史事件、专注度、行为分布整理成面向教学复盘的结论页{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/history.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/showcase.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="showcase-hero glass-card">
+  <div>
+    <p class="showcase-kicker">CLASSROOM INSIGHTS</p>
+    <h3 class="showcase-title">从事件记录里提炼课堂状态，而不只是罗列检测结果。</h3>
+    <p class="showcase-text">本页复用系统已有统计接口，将最近风险、行为分布、专注度摘要和趋势变化集中展示，适合答辩时说明“分析结果能辅助教学复盘”。</p>
+  </div>
+  <div class="showcase-side">
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">专注度</p>
+      <p id="insightFocusScore" class="metric-value">--</p>
+      <p id="insightFocusLevel" class="metric-hint">等待统计数据</p>
+    </article>
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">近期事件</p>
+      <p id="insightRecentCount" class="metric-value">0</p>
+      <p class="metric-hint">用于观察课堂波动密度。</p>
+    </article>
+  </div>
+</section>
+
+<div class="grid-cols-4">
+  {% set label = "完成报告" %}
+  {% set value_id = "insightCompletedReports" %}
+  {% set hint = "当前账号可查看的完成报告数量" %}
+  {% include "components/metric_card.html" %}
+
+  {% set label = "处理中任务" %}
+  {% set value_id = "insightQueuedJobs" %}
+  {% set hint = "排队或正在分析的视频任务" %}
+  {% include "components/metric_card.html" %}
+
+  {% set label = "高频行为" %}
+  {% set value_id = "insightTopBehavior" %}
+  {% set hint = "最近统计中出现最多的行为类别" %}
+  {% include "components/metric_card.html" %}
+
+  {% set label = "数据来源" %}
+  {% set value_id = "insightSource" %}
+  {% set hint = "当前统计来自实时或离线分析链路" %}
+  {% include "components/metric_card.html" %}
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <h3 class="panel-title">行为趋势</h3>
+    <p class="panel-subtitle">按时间展示近期课堂风险行为变化。</p>
+    <div id="insightTrendChart" class="trend-bars">
+      <p class="empty-text">暂无趋势数据</p>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 class="panel-title">行为分布</h3>
+    <p class="panel-subtitle">用于快速判断当前课堂主要波动来自哪类行为。</p>
+    <div id="insightBehaviorTotals" class="stack-list">
+      <p class="empty-text">暂无行为统计</p>
+    </div>
+  </section>
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <h3 class="panel-title">最近风险</h3>
+    <p class="panel-subtitle">保留最近几条事件，方便现场讲解风险是如何产生的。</p>
+    <div id="insightRiskList" class="stack-list">
+      <p class="empty-text">暂无风险事件</p>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 class="panel-title">分析结论</h3>
+    <p class="panel-subtitle">把系统统计转换成更适合教学复盘的解释。</p>
+    <div id="insightConclusionList" class="stack-list">
+      <p class="empty-text">等待统计数据</p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/insights.js') }}"></script>
+{% endblock %}

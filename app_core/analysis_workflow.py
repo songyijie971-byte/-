@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Callable, Dict, Optional
 
+from app_core.inference_runtime import predict_with_preferred_device
+
 
 class UploadAnalysisValidationError(Exception):
     def __init__(self, message: str, error_code: str) -> None:
@@ -57,6 +59,8 @@ class AnalysisRuntimeContext:
     json_loads: Callable
     format_timestamp: Callable
     format_datetime: Callable
+    upload_dir: str
+    allowed_image_extensions: set
     allowed_video_extensions: set
     logger: object
     cv2: object
@@ -118,6 +122,10 @@ class UploadAnalysisApplicationService:
         _, ext = os.path.splitext(filename.lower())
         return ext in self.runtime.allowed_video_extensions
 
+    def allowed_image_file(self, filename: str) -> bool:
+        _, ext = os.path.splitext(filename.lower())
+        return ext in self.runtime.allowed_image_extensions
+
     def query_jobs_for_user(self, db, user):
         return self.repositories.query_jobs_for_user(db, user)
 
@@ -127,13 +135,21 @@ class UploadAnalysisApplicationService:
     def get_visible_job(self, db, user, job_id, include_deleted: bool = False):
         return self.repositories.get_visible_job(db, user, job_id, include_deleted=include_deleted)
 
-    def update_job_record(self, job_id: str, **fields) -> None:
+    def update_job_record(self, job_id: str, **fields) -> bool:
         with self.runtime.session_scope(self.runtime.session_factory) as db:
             job = self.repositories.get_job_by_id(db, job_id)
             if job is None:
-                return
+                return False
+            if job.status == "deleted":
+                self.runtime.logger.info(
+                    "Skip updating deleted upload analysis job=%s fields=%s",
+                    job_id,
+                    sorted(fields.keys()),
+                )
+                return False
             for key, value in fields.items():
                 setattr(job, key, value)
+            return True
 
     def purge_job_artifacts(self, job_id: str, user_id: int) -> None:
         with self.runtime.session_scope(self.runtime.session_factory) as db:
@@ -144,8 +160,20 @@ class UploadAnalysisApplicationService:
             job = self.repositories.get_job_by_id(db, job_id)
             return bool(job is None or job.status == "deleted")
 
-    def save_report_record(self, job_id: str, user_id: int, report_payload: Dict[str, object]) -> None:
+    def save_report_record(
+        self,
+        job_id: str,
+        user_id: int,
+        report_payload: Dict[str, object],
+    ) -> bool:
         with self.runtime.session_scope(self.runtime.session_factory) as db:
+            job = self.repositories.get_job_by_id(db, job_id)
+            if job is None or job.status == "deleted":
+                self.runtime.logger.info(
+                    "Skip saving report for deleted or missing upload analysis job=%s",
+                    job_id,
+                )
+                return False
             report = self.repositories.get_or_create_report(db, job_id, user_id)
             report.generated_at = datetime.utcnow()
             report.focus_score_json = self.runtime.json_dumps(report_payload.get("focus_score", {}))
@@ -166,6 +194,7 @@ class UploadAnalysisApplicationService:
             report.analysis_metrics_json = self.runtime.json_dumps(
                 report_payload.get("analysis_metrics", {})
             )
+            return True
 
     def create_upload_job(
         self,
@@ -222,6 +251,117 @@ class UploadAnalysisApplicationService:
 
         temporal_state = analyzer.update(frame_behaviors, timestamp, alert_callback=handle_alert)
         return self.runtime.calculate_focus_score(temporal_state["stable_counts"])
+
+    def analyze_uploaded_image(
+        self,
+        file_path: str,
+        original_filename: str,
+        source_relative_path: str,
+        source_size_bytes: int = 0,
+    ) -> Dict[str, object]:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError("上传图片不存在或已被移动，请重新上传。")
+
+        frame = self.runtime.cv2.imread(file_path)
+        if frame is None:
+            raise ValueError("无法读取当前图片文件，请确认文件完整且格式受支持。")
+
+        height, width = frame.shape[:2]
+        model = self.runtime.get_model()
+        timestamp = time.time()
+        results = predict_with_preferred_device(
+            model,
+            frame,
+            logger=self.runtime.logger,
+            conf=0.35,
+            iou=0.45,
+            imgsz=self.yolo_imgsz(),
+            verbose=False,
+        )
+        detections = self.runtime.normalize_detections(results[0], model.names, timestamp)
+        frame_behaviors = self.runtime.map_detections_to_behaviors(detections)
+        stable_counts = {
+            behavior_key: int(frame_behaviors.get(behavior_key).count if frame_behaviors.get(behavior_key) else 0)
+            for behavior_key in self.runtime.behavior_display_names
+        }
+        focus_snapshot = self.runtime.calculate_focus_score(stable_counts)
+
+        source_relative_path = source_relative_path.replace("\\", "/")
+        relative_stem, _ = os.path.splitext(source_relative_path)
+        annotated_relative_path = "{}_annotated.jpg".format(relative_stem)
+        annotated_relative_path = annotated_relative_path.replace("\\", "/")
+        annotated_path = os.path.join(
+            self.runtime.upload_dir,
+            *annotated_relative_path.split("/"),
+        )
+        os.makedirs(os.path.dirname(annotated_path), exist_ok=True)
+        annotated_frame = results[0].plot()
+        if not self.runtime.cv2.imwrite(annotated_path, annotated_frame):
+            raise ValueError("图片分析结果生成失败，无法写入标注图片。")
+
+        behavior_items = []
+        for behavior_key, behavior in frame_behaviors.items():
+            if int(behavior.count) <= 0:
+                continue
+            behavior_items.append(
+                {
+                    "behavior_key": behavior_key,
+                    "behavior_name": behavior.behavior_name,
+                    "count": int(behavior.count),
+                    "confidence": round(float(behavior.confidence), 3),
+                    "source_class_ids": list(behavior.source_class_ids),
+                }
+            )
+        behavior_items.sort(
+            key=lambda item: (int(item["count"]), float(item["confidence"])),
+            reverse=True,
+        )
+
+        detections_payload = []
+        for detection in detections[:12]:
+            detections_payload.append(
+                {
+                    "class_id": int(detection.class_id),
+                    "class_name": detection.class_name,
+                    "confidence": round(float(detection.confidence), 3),
+                    "bbox": [round(float(value), 1) for value in detection.bbox],
+                }
+            )
+
+        summary_message = "图片分析完成，已输出当前画面的单帧识别结果。"
+        if behavior_items:
+            summary_message = "图片分析完成，检测到 {} 类课堂行为，共 {} 个目标。".format(
+                len(behavior_items),
+                len(detections),
+            )
+        elif detections_payload:
+            summary_message = "图片分析完成，已检测到目标，但暂未映射到课堂行为标签。"
+
+        return {
+            "analysis_type": "image",
+            "status": "completed",
+            "status_label": "已完成",
+            "progress": 100.0,
+            "message": summary_message,
+            "status_detail": "图片模式基于单帧识别，只展示当前画面中的检测结果，不生成连续帧告警与时序报告。",
+            "source_mode": "image",
+            "source_label": "上传图片",
+            "filename": original_filename,
+            "source_size_bytes": int(source_size_bytes or 0),
+            "image_width": int(width),
+            "image_height": int(height),
+            "detections_count": len(detections),
+            "detections": detections_payload,
+            "behavior_items": behavior_items,
+            "focus_score": focus_snapshot,
+            "source_url": "/image-uploads/{}".format(source_relative_path),
+            "annotated_url": "/image-uploads/{}".format(annotated_relative_path),
+            "source_relative_path": source_relative_path,
+            "annotated_relative_path": annotated_relative_path,
+            "report_ready": False,
+            "analysis_note": "单张图片无法触发“连续帧阈值”和“持续时长”规则，因此该模式适用于展示模型静态识别能力。",
+            "analyzed_at": self.runtime.format_datetime(datetime.utcnow()),
+        }
 
     def process_uploaded_video(self, job_id: str, user_id: int, file_path: str) -> None:
         upload_analyzer = self.temporal_analyzer_factory(
@@ -340,8 +480,10 @@ class UploadAnalysisApplicationService:
                     continue
 
                 timestamp = analysis_base_timestamp + (frame_index / fps)
-                results = model.predict(
+                results = predict_with_preferred_device(
+                    model,
                     frame,
+                    logger=self.runtime.logger,
                     conf=0.35,
                     iou=0.45,
                     imgsz=self.yolo_imgsz(),
@@ -441,8 +583,32 @@ class UploadAnalysisApplicationService:
                 "rule_snapshot": self.report_builders.build_rule_snapshot_for_report(),
                 "analysis_metrics": analysis_metrics,
             }
-            self.save_report_record(job_id, user_id, report_payload)
-            self.update_job_record(
+            if self.is_job_deleted(job_id):
+                self.purge_job_artifacts(job_id, user_id)
+                self.runtime.logger.info(
+                    "Upload analysis job=%s deleted=true before report persistence",
+                    job_id,
+                )
+                return
+
+            report_saved = self.save_report_record(job_id, user_id, report_payload)
+            if not report_saved:
+                self.purge_job_artifacts(job_id, user_id)
+                self.runtime.logger.info(
+                    "Upload analysis job=%s report persistence skipped for deleted job",
+                    job_id,
+                )
+                return
+
+            if self.is_job_deleted(job_id):
+                self.purge_job_artifacts(job_id, user_id)
+                self.runtime.logger.info(
+                    "Upload analysis job=%s deleted=true before completion update",
+                    job_id,
+                )
+                return
+
+            updated = self.update_job_record(
                 job_id,
                 status="completed",
                 progress=100.0,
@@ -457,6 +623,13 @@ class UploadAnalysisApplicationService:
                 error_code=None,
                 error_message=None,
             )
+            if not updated:
+                self.purge_job_artifacts(job_id, user_id)
+                self.runtime.logger.info(
+                    "Upload analysis job=%s completion update skipped for deleted job",
+                    job_id,
+                )
+                return
             elapsed = time.perf_counter() - processing_started_at
             self.runtime.logger.info(
                 "Upload analysis job=%s stage=completed elapsed=%.2fs", job_id, elapsed

@@ -1,0 +1,77 @@
+{% extends "layout/base.html" %}
+
+{% block title %}证据链{% endblock %}
+{% block page_title %}证据链{% endblock %}
+{% block page_subtitle %}集中展示告警、截图、单帧识别和报告入口，让分析结果可追溯{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/showcase.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="showcase-hero glass-card">
+  <div>
+    <p class="showcase-kicker">EVIDENCE CHAIN</p>
+    <h3 class="showcase-title">每个结论都尽量配套来源、时间和截图证据。</h3>
+    <p class="showcase-text">这一页把最近事件、关键截图、单帧图片分析和最新报告入口放在一起，用来说明系统输出不是孤立数字，而是可以回看和解释的证据链。</p>
+  </div>
+  <div class="showcase-side">
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">累计事件</p>
+      <p id="evidenceTotalCount" class="metric-value">0</p>
+      <p class="metric-hint">当前可见历史事件总数。</p>
+    </article>
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">最新报告</p>
+      <p id="evidenceReportState" class="metric-value">--</p>
+      <p class="metric-hint">完成分析后可直接打开报告。</p>
+    </article>
+  </div>
+</section>
+
+<div class="evidence-grid">
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">最近告警截图</h3>
+        <p id="evidenceSnapshotMeta" class="panel-subtitle">暂无截图证据</p>
+      </div>
+    </div>
+    <img id="evidenceSnapshotImage" class="evidence-preview hidden" alt="最近告警截图">
+    <div id="evidenceSnapshotEmpty" class="empty-frame">暂无最近告警截图。完成一次实时监测或视频分析后，这里会显示关键证据。</div>
+  </section>
+
+  <section class="glass-card">
+    <div class="section-head">
+      <div>
+        <h3 class="panel-title">最新单帧识别</h3>
+        <p id="evidenceImageMeta" class="panel-subtitle">暂无图片分析结果</p>
+      </div>
+    </div>
+    <img id="evidenceImagePreview" class="evidence-preview hidden" alt="最新图片分析结果">
+    <div id="evidenceImageEmpty" class="empty-frame">暂无图片识别结果。可在“视频分析”页上传单张课堂截图生成。</div>
+  </section>
+</div>
+
+<div class="grid-main">
+  <section class="glass-card">
+    <h3 class="panel-title">最近事件链路</h3>
+    <p class="panel-subtitle">按时间列出最近事件，便于从记录追溯到报告。</p>
+    <div id="evidenceEventList" class="stack-list">
+      <p class="empty-text">暂无事件记录</p>
+    </div>
+  </section>
+
+  <section class="glass-card">
+    <h3 class="panel-title">报告与解释</h3>
+    <p class="panel-subtitle">完成视频分析后，系统会把统计、建议和截图证据整理为报告。</p>
+    <div id="evidenceReportBox" class="showcase-list">
+      <div class="showcase-row"><strong>报告状态</strong><p>暂无可打开报告。</p></div>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block page_scripts %}
+<script src="{{ url_for('static', filename='js/pages/evidence.js') }}"></script>
+{% endblock %}

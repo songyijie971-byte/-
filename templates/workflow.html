@@ -1,0 +1,88 @@
+{% extends "layout/base.html" %}
+
+{% block title %}系统流程{% endblock %}
+{% block page_title %}系统流程{% endblock %}
+{% block page_subtitle %}把识别、规则、告警、报告串成一条可以讲清楚的工程链路{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/showcase.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="showcase-hero glass-card">
+  <div>
+    <p class="showcase-kicker">SYSTEM WORKFLOW</p>
+    <h3 class="showcase-title">从课堂画面到可追溯报告，系统按完整闭环组织。</h3>
+    <p class="showcase-text">这一页用于答辩时说明整体工作量：系统不是单独跑一个模型，而是包含数据输入、模型推理、行为映射、时序判定、风险告警、结果沉淀和报告展示。</p>
+  </div>
+  <div class="showcase-side">
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">输入模式</p>
+      <p class="metric-value">2 类</p>
+      <p class="metric-hint">实时摄像头与上传视频/图片分析。</p>
+    </article>
+    <article class="metric-card metric-card-compact">
+      <p class="metric-label">结果输出</p>
+      <p class="metric-value">4 层</p>
+      <p class="metric-hint">统计、趋势、截图证据、课堂报告。</p>
+    </article>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">主流程链路</h3>
+      <p class="panel-subtitle">这条链路对应论文和答辩中最容易讲清楚的系统设计主线。</p>
+    </div>
+  </div>
+  <div class="workflow-lane">
+    <article class="lane-node"><strong>课堂输入</strong><span>摄像头画面、课堂录像、单帧截图进入系统。</span></article>
+    <article class="lane-node"><strong>模型识别</strong><span>YOLO ONNX 输出检测框、类别和置信度。</span></article>
+    <article class="lane-node"><strong>行为映射</strong><span>把模型类别转换成低头、睡觉、举手、转头交谈等课堂行为。</span></article>
+    <article class="lane-node"><strong>时序判定</strong><span>连续帧阈值过滤偶发误检，形成稳定行为事件。</span></article>
+    <article class="lane-node"><strong>风险告警</strong><span>根据告警秒数和启用状态生成课堂提醒与截图证据。</span></article>
+    <article class="lane-node"><strong>报告沉淀</strong><span>汇总趋势、建议、证据图和规则快照，生成分析报告。</span></article>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">模块拆分</h3>
+      <p class="panel-subtitle">按工程模块展示实现范围，适合回答“你具体做了哪些功能”。</p>
+    </div>
+  </div>
+  <div class="process-grid">
+    <article class="process-step" data-step="01">
+      <p class="showcase-mini">INPUT</p>
+      <h4>实时与离线双入口</h4>
+      <p>实时监测面向课堂现场，上传分析面向课后复盘；图片模式用于单帧识别演示和论文截图。</p>
+    </article>
+    <article class="process-step" data-step="02">
+      <p class="showcase-mini">RULE</p>
+      <h4>行为规则可配置</h4>
+      <p>管理员可以调整连续帧、告警秒数、运行预设，减少硬编码，让演示和实验有参数对比空间。</p>
+    </article>
+    <article class="process-step" data-step="03">
+      <p class="showcase-mini">REPORT</p>
+      <h4>自动报告生成</h4>
+      <p>分析完成后生成风险结论、教师建议、行为统计、趋势图和关键截图，形成可展示成果。</p>
+    </article>
+  </div>
+</section>
+
+<section class="glass-card">
+  <div class="section-head">
+    <div>
+      <h3 class="panel-title">答辩讲解顺序</h3>
+      <p class="panel-subtitle">按这个顺序演示，老师会更容易感受到系统是一个完整应用。</p>
+    </div>
+  </div>
+  <div class="showcase-list">
+    <div class="showcase-row"><strong>先讲入口</strong><p>展示实时监测和视频分析，说明系统支持课堂现场与课后复盘两类场景。</p></div>
+    <div class="showcase-row"><strong>再讲规则</strong><p>打开规则配置页，说明连续帧阈值和告警秒数如何提升稳定性。</p></div>
+    <div class="showcase-row"><strong>最后讲结果</strong><p>进入课堂洞察、证据链、实验评估和运行部署页，把工程实现、实验验证和可维护性串起来。</p></div>
+  </div>
+</section>
+{% endblock %}

@@ -1,8 +1,8 @@
 {% extends "layout/base.html" %}
 
-{% block title %}鍘嗗彶鍒嗘瀽{% endblock %}
-{% block page_title %}鍘嗗彶鍒嗘瀽{% endblock %}
-{% block page_subtitle %}绱琛屼负缁熻銆佽秼鍔垮彉鍖栦笌鏃堕棿绾垮洖鏀緖% endblock %}
+{% block title %}历史记录{% endblock %}
+{% block page_title %}历史记录{% endblock %}
+{% block page_subtitle %}查看近期课堂事件趋势、行为统计和关键截图，便于事后复盘{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/history.css') }}">
@@ -12,71 +12,72 @@
 <section class="page-hero glass-card">
   <div class="page-hero-copy">
     <p class="page-hero-kicker">HISTORY INTELLIGENCE LAYER</p>
-    <h3 class="page-hero-title">鍘嗗彶杞ㄨ抗鍥炵湅</h3>
+    <h3 class="page-hero-title">历史趋势与事件回放</h3>
     <p class="page-hero-text">
-      浠庣疮璁′簨浠躲€佽涓哄垎甯冨埌鏃堕棿绾胯瘉鎹紝蹇€熷洖鐪嬭鍫傝繍琛岃繃绋嬮噷鐨勯珮棰戦闄╀笌闃舵鎬у彉鍖栥€?    </p>
+      这里汇总近期告警和行为分布，适合快速查看过去一段时间的课堂波动、重点行为和时间线变化。
+    </p>
   </div>
   <div class="page-hero-side">
     <article class="hero-stat-card">
       <p class="hero-stat-label">Recent Events</p>
       <p id="heroRecentAlertCount" class="hero-stat-value">0</p>
-      <p class="hero-stat-hint">鑱氱劍鏈€杩戠獥鍙ｅ唴鐨勬椿璺冨憡璀︼紝渚夸簬蹇€熷垽鏂綋鍓嶆槸鍚﹀瓨鍦ㄦ尝鍔ㄣ€?/p>
+      <p class="hero-stat-hint">最近一段时间内被记录的课堂事件数量。</p>
     </article>
     <article class="hero-stat-card hero-stat-card-accent">
       <p class="hero-stat-label">Latest Event</p>
       <p id="heroLatestEventTime" class="hero-stat-value hero-stat-value-small">--</p>
-      <p class="hero-stat-hint">鏈€杩戜竴娆′簨浠舵椂闂翠細涓庢椂闂寸嚎鍜屾埅鍥捐瘉鎹繚鎸佷竴鑷淬€?/p>
+      <p class="hero-stat-hint">最近一次事件发生的时间。</p>
     </article>
   </div>
 </section>
 
 <div class="grid-cols-4">
-  {% set label = "鏈€杩戝憡璀︽暟" %}
+  {% set label = "近期事件数" %}
   {% set value_id = "recentAlertCount" %}
-  {% set hint = "鏈€杩戠獥鍙ｇ粺璁? %}
+  {% set hint = "最近窗口内的事件总数" %}
   {% include "components/metric_card.html" %}
 
-  {% set label = "绱鍛婅鏁? %}
+  {% set label = "累计事件数" %}
   {% set value_id = "totalAlertCount" %}
-  {% set hint = "鍏ㄩ噺鍘嗗彶绱" %}
+  {% set hint = "当前历史记录中的全部事件数" %}
   {% include "components/metric_card.html" %}
 
-  {% set label = "楂橀琛屼负" %}
+  {% set label = "高频行为" %}
   {% set value_id = "mostFrequentBehavior" %}
-  {% set hint = "鎸夌疮璁℃鏁版帓搴? %}
+  {% set hint = "出现次数最多的行为类型" %}
   {% include "components/metric_card.html" %}
 
-  {% set label = "鏈€杩戜簨浠舵椂闂? %}
+  {% set label = "最近事件时间" %}
   {% set value_id = "latestEventTime" %}
-  {% set hint = "鏈€杩戜竴娆″憡璀? %}
+  {% set hint = "最近一次事件的时间戳" %}
   {% include "components/metric_card.html" %}
 </div>
 
 <div class="grid-main">
   <section class="glass-card">
-    <h3 class="panel-title">琛屼负瓒嬪娍鍥?/h3>
+    <h3 class="panel-title">行为趋势</h3>
     <div id="trendChart" class="trend-bars">
-      <p class="empty-text">鏆傛棤瓒嬪娍鏁版嵁</p>
+      <p class="empty-text">暂无趋势数据</p>
     </div>
   </section>
 
   <section class="glass-card">
-    <h3 class="panel-title">琛屼负鍒嗗竷</h3>
+    <h3 class="panel-title">行为统计</h3>
     <div id="behaviorTotals" class="stack-list">
-      <p class="empty-text">鏆傛棤缁熻鏁版嵁</p>
+      <p class="empty-text">暂无行为统计</p>
     </div>
   </section>
 </div>
 
 <div class="grid-main">
   <section class="glass-card">
-    <h3 class="panel-title">鏈€杩戜簨浠舵椂闂寸嚎</h3>
+    <h3 class="panel-title">时间线</h3>
     <div id="timelineList" class="stack-list">
-      <p class="empty-text">鏆傛棤浜嬩欢</p>
+      <p class="empty-text">暂无时间线数据</p>
     </div>
   </section>
 
-  {% set title = "鏈€鏂颁簨浠舵埅鍥? %}
+  {% set title = "最近截图" %}
   {% set empty_id = "snapshotEmpty" %}
   {% set image_id = "snapshotImage" %}
   {% set meta_id = "snapshotMeta" %}

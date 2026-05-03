@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>鐢ㄦ埛娉ㄥ唽</title>
+  <title>注册账户</title>
   <style>
     :root {
       --bg:
@@ -38,7 +38,6 @@
     h1 {
       margin: 0;
       font-size: 34px;
-      font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
     }
     .sub {
       margin: 12px 0 26px;
@@ -109,8 +108,8 @@
 </head>
 <body>
   <div class="card">
-    <h1>鍒涘缓璐﹀彿</h1>
-    <div class="sub">娉ㄥ唽鍚庡彲涓婁紶瑙嗛銆佹煡鐪嬭嚜宸辩殑鍒嗘瀽浠诲姟涓庢姤鍛娿€傜郴缁熼粯璁ゅ凡鎻愪緵绠＄悊鍛樿处鍙凤紱濡傛灉褰撳墠鏁版嵁搴撻噷杩樻病鏈夌鐞嗗憳锛岄涓敞鍐岃处鍙蜂篃浼氳嚜鍔ㄦ垚涓虹鐞嗗憳銆?/div>
+    <h1>创建账户</h1>
+    <div class="sub">填写基础信息后即可创建新的登录账户，用于进入课堂行为分析平台。</div>
 
     {% if error %}
     <div class="error">{{ error }}</div>
@@ -119,31 +118,30 @@
     <form method="post">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div class="field">
-        <label for="username">鐢ㄦ埛鍚?/label>
-        <input id="username" name="username" type="text" minlength="3" placeholder="璇疯緭鍏ョ敤鎴峰悕" required>
+        <label for="username">用户名</label>
+        <input id="username" name="username" type="text" minlength="3" placeholder="请输入用户名" required>
       </div>
       <div class="field">
-        <label for="email">閭</label>
-        <input id="email" name="email" type="email" placeholder="璇疯緭鍏ラ偖绠? required>
+        <label for="email">邮箱</label>
+        <input id="email" name="email" type="email" placeholder="请输入邮箱地址" required>
       </div>
       <div class="field">
-        <label for="password">瀵嗙爜</label>
-        <input id="password" name="password" type="password" minlength="6" placeholder="鑷冲皯 6 浣嶅瘑鐮? required>
+        <label for="password">密码</label>
+        <input id="password" name="password" type="password" minlength="6" placeholder="至少 6 位密码" required>
       </div>
       <div class="field">
-        <label for="confirm_password">纭瀵嗙爜</label>
-        <input id="confirm_password" name="confirm_password" type="password" minlength="6" placeholder="鍐嶆杈撳叆瀵嗙爜" required>
+        <label for="confirm_password">确认密码</label>
+        <input id="confirm_password" name="confirm_password" type="password" minlength="6" placeholder="再次输入密码" required>
       </div>
-      <button class="submit" type="submit">瀹屾垚娉ㄥ唽</button>
+      <button class="submit" type="submit">完成注册</button>
     </form>
 
     <div class="tip">
-      榛樿绠＄悊鍛樿处鍙凤細<code>admin</code><br>
-      榛樿绠＄悊鍛樺瘑鐮侊細<code>admin123456</code><br>
-      浠ヤ笂璐﹀彿鏃犻渶閰嶇疆鐜鍙橀噺鍗冲彲浣跨敤銆?    </div>
+      建议注册后立即修改默认资料，并为课堂演示准备独立账户，便于区分管理员、教师与普通用户权限。
+    </div>
 
     <div class="footer">
-      宸叉湁璐﹀彿锛?a href="/login">杩斿洖鐧诲綍</a>
+      已有账户？<a href="/login">返回登录</a>
     </div>
   </div>
 </body>

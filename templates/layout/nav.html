@@ -1,18 +1,39 @@
 <nav class="side-nav">
   {% if can_access_camera %}
   <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/dashboard">
-    <span>绯荤粺鎬昏</span>
+    <span>系统总览</span>
   </a>
   <a class="nav-link {% if active_page == 'monitor' %}active{% endif %}" href="/monitor">
-    <span>瀹炴椂鐩戞祴</span>
+    <span>实时监测</span>
   </a>
   {% endif %}
   <a class="nav-link {% if active_page == 'analysis' %}active{% endif %}" href="/analysis-view">
-    <span>绂荤嚎鍒嗘瀽</span>
+    <span>视频分析</span>
+  </a>
+  <a class="nav-link {% if active_page == 'history' %}active{% endif %}" href="/history-view">
+    <span>历史记录</span>
+  </a>
+  <a class="nav-link {% if active_page == 'insights' %}active{% endif %}" href="/insights">
+    <span>课堂洞察</span>
+  </a>
+  <a class="nav-link {% if active_page == 'evidence' %}active{% endif %}" href="/evidence">
+    <span>证据链</span>
+  </a>
+  <a class="nav-link {% if active_page == 'workflow' %}active{% endif %}" href="/workflow">
+    <span>系统流程</span>
+  </a>
+  <a class="nav-link {% if active_page == 'evaluation' %}active{% endif %}" href="/evaluation">
+    <span>实验评估</span>
+  </a>
+  <a class="nav-link {% if active_page == 'experiment_method' %}active{% endif %}" href="/experiment-method">
+    <span>实验方法</span>
+  </a>
+  <a class="nav-link {% if active_page == 'operations' %}active{% endif %}" href="/operations">
+    <span>运行部署</span>
   </a>
   {% if current_user.role == "admin" %}
-  <a class="nav-link" href="/admin/rules">
-    <span>瑙勫垯閰嶇疆</span>
+  <a class="nav-link {% if active_page == 'admin_rules' %}active{% endif %}" href="/admin/rules">
+    <span>规则配置</span>
   </a>
   {% endif %}
 </nav>

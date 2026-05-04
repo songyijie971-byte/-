@@ -1,0 +1,100 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: classroom_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password_123
+      MYSQL_DATABASE: classroom_demo
+      MYSQL_USER: classroom_user
+      MYSQL_PASSWORD: classroom_pass_123
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - classroom_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-proot_password_123",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 15s
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --innodb-buffer-pool-size=128M
+      --innodb-log-file-size=32M
+      --max-connections=100
+      --skip-character-set-client-handshake
+      --default-time-zone='+08:00'
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: classroom_demo_app:latest
+    container_name: classroom_app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: mysql+pymysql://classroom_user:classroom_pass_123@mysql:3306/classroom_demo?charset=utf8mb4
+      YOLO_MODEL_PATH: /app/data/model/best.onnx
+      UPLOAD_DIR: /app/data/uploads
+      JOB_QUEUE_DIR: /app/data/job_queue
+      FLASK_ENV: production
+      LOG_LEVEL: INFO
+      SEED_DEFAULT_ADMIN: "1"
+      DEFAULT_ADMIN_PASSWORD: admin123456
+      SESSION_COOKIE_SECURE: "0"
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./best.onnx:/app/data/model/best.onnx:ro
+      - uploads_data:/app/data/uploads
+      - alerts_data:/app/data/alerts
+      - job_queue_data:/app/data/job_queue
+      - runtime_data:/app/data/runtime
+    networks:
+      - classroom_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/api/health', timeout=3)",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+
+networks:
+  classroom_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  uploads_data:
+  alerts_data:
+  job_queue_data:
+  runtime_data:

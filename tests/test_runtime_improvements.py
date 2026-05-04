@@ -207,8 +207,22 @@ class RuntimeImprovementsTests(unittest.TestCase):
 
         return _FakeModel()
 
-    def test_health_endpoint_reports_core_components(self):
+    def test_public_health_endpoint_is_minimal(self):
         response = self.client.get("/api/health")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertIn("checked_at", payload)
+        self.assertNotIn("database", payload)
+        self.assertNotIn("runtime", payload)
+        self.assertNotIn("job_queue", payload)
+
+    def test_health_details_endpoint_reports_core_components(self):
+        user_client = self.app.test_client()
+        self.register(user_client, "ops_user", "ops_user@example.com")
+
+        response = user_client.get("/api/health/details")
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
@@ -224,7 +238,9 @@ class RuntimeImprovementsTests(unittest.TestCase):
         os.environ["YOLO_MODEL_PATH"] = os.path.join(self.temp_dir, "missing.onnx")
         self._reload_webapp()
 
-        response = self.client.get("/api/health")
+        user_client = self.app.test_client()
+        self.register(user_client, "missing_model_user", "missing_model_user@example.com")
+        response = user_client.get("/api/health/details")
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
@@ -238,7 +254,9 @@ class RuntimeImprovementsTests(unittest.TestCase):
         os.environ["JOB_EXECUTOR_PROCESS_WORKERS"] = "3"
         self._reload_webapp()
 
-        response = self.client.get("/api/health")
+        user_client = self.app.test_client()
+        self.register(user_client, "process_user", "process_user@example.com")
+        response = user_client.get("/api/health/details")
 
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
@@ -288,7 +306,7 @@ class RuntimeImprovementsTests(unittest.TestCase):
         self.assertEqual(len(pending_files), 0)
         self.assertEqual(len(done_files), 1)
 
-        health = self.client.get("/api/health").get_json()
+        health = user_client.get("/api/health/details").get_json()
         self.assertEqual(health["job_queue"]["backend"], "queue")
         self.assertEqual(health["job_queue"]["pending"], 0)
         self.assertEqual(health["job_queue"]["done"], 1)

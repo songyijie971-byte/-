@@ -4,10 +4,10 @@ services:
     container_name: classroom_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_password_123
-      MYSQL_DATABASE: classroom_demo
-      MYSQL_USER: classroom_user
-      MYSQL_PASSWORD: classroom_pass_123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-classroom_demo}
+      MYSQL_USER: ${MYSQL_APP_USER:-classroom_user}
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?set MYSQL_APP_PASSWORD in .env}
       TZ: Asia/Shanghai
     ports:
       - "3306:3306"
@@ -25,7 +25,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-proot_password_123",
+          "-p${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}",
         ]
       interval: 5s
       timeout: 3s
@@ -52,15 +52,15 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      DATABASE_URL: mysql+pymysql://classroom_user:classroom_pass_123@mysql:3306/classroom_demo?charset=utf8mb4
+      DATABASE_URL: mysql+pymysql://${MYSQL_APP_USER:-classroom_user}:${MYSQL_APP_PASSWORD:?set MYSQL_APP_PASSWORD in .env}@mysql:3306/${MYSQL_DATABASE:-classroom_demo}?charset=utf8mb4
       YOLO_MODEL_PATH: /app/data/model/best.onnx
       UPLOAD_DIR: /app/data/uploads
       JOB_QUEUE_DIR: /app/data/job_queue
       FLASK_ENV: production
       LOG_LEVEL: INFO
       SEED_DEFAULT_ADMIN: "1"
-      DEFAULT_ADMIN_PASSWORD: admin123456
-      SESSION_COOKIE_SECURE: "0"
+      DEFAULT_ADMIN_PASSWORD: ${DEFAULT_ADMIN_PASSWORD:?set DEFAULT_ADMIN_PASSWORD in .env}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-0}
     ports:
       - "5000:5000"
     volumes:

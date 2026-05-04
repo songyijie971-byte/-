@@ -9,6 +9,7 @@ def register_config_routes(app, deps):
     admin_required_page = deps["admin_required_page"]
     admin_required_api = deps["admin_required_api"]
     login_required_page = deps["login_required_page"]
+    login_required_api = deps["login_required_api"]
     EXPERIMENT_OVERVIEW = deps["EXPERIMENT_OVERVIEW"]
     csrf_protect_api = deps["csrf_protect_api"]
 
@@ -67,6 +68,19 @@ def register_config_routes(app, deps):
 
     @app.route("/api/health")
     def api_health():
+        payload = build_health_payload()
+        public_payload = {
+            "ok": payload.get("ok", False),
+            "status": payload.get("status", "error"),
+            "message": payload.get("message", "系统健康检查完成。"),
+            "checked_at": payload.get("checked_at"),
+        }
+        status_code = 200 if payload.get("status") != "error" else 503
+        return jsonify(public_payload), status_code
+
+    @app.route("/api/health/details")
+    @login_required_api
+    def api_health_details():
         payload = build_health_payload()
         status_code = 200 if payload.get("status") != "error" else 503
         return jsonify(payload), status_code

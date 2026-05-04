@@ -96,7 +96,7 @@
   }
 
   async function loadHealth() {
-    const response = await fetch("/api/health", { credentials: "same-origin" });
+    const response = await fetch("/api/health/details", { credentials: "same-origin" });
     const payload = await response.json();
     setText("opsOverallStatus", statusLabel(payload.status));
     setText("opsCheckedAt", payload.checked_at ? "检查时间：" + payload.checked_at : "健康检查已完成");

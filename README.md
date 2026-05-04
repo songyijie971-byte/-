@@ -66,7 +66,8 @@ PowerShell 一键脚本（推荐）：
 - 系统总览：[http://127.0.0.1:5000/](http://127.0.0.1:5000/)
 - 规则配置中心：[http://127.0.0.1:5000/admin/rules](http://127.0.0.1:5000/admin/rules)
 - 实验评估页：[http://127.0.0.1:5000/evaluation](http://127.0.0.1:5000/evaluation)
-- 健康检查接口：[http://127.0.0.1:5000/api/health](http://127.0.0.1:5000/api/health)
+- 公开探活接口：[http://127.0.0.1:5000/api/health](http://127.0.0.1:5000/api/health)
+- 登录后运维页：[http://127.0.0.1:5000/operations](http://127.0.0.1:5000/operations)
 
 ## 运行与退化策略
 
@@ -114,7 +115,7 @@ PowerShell 一键脚本（推荐）：
 ### 演示前检查清单
 
 - 确认 `best.onnx` 存在，或通过 `YOLO_MODEL_PATH` 指向正确模型文件。
-- 运行 `.\scripts\run_sqlite.ps1` 后先打开 `/api/health`，确认数据库、模型、上传目录状态正常。
+- 运行 `.\scripts\run_sqlite.ps1` 后先打开 `/api/health` 确认服务可用，再登录进入 `/operations` 查看数据库、模型、上传目录状态。
 - 准备一段较短课堂样例视频，避免现场等待过长；如需快速演示，可优先使用 `samples/demo_videos/`。
 - 提前用默认管理员完成首次改密，确保答辩时直接进入系统主界面。
 - 如果现场摄像头不可用，按“系统自动降级到占位画面，离线分析和报告不受影响”解释即可。

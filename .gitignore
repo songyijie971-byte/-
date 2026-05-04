@@ -2,6 +2,9 @@
 .idea/
 .claude/
 .cursor/skills/
+.env
+.env.*
+!.env.example
 __pycache__/
 *.py[cod]
 

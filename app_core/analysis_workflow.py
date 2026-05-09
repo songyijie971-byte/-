@@ -463,6 +463,15 @@ class UploadAnalysisApplicationService:
             current_stage = "frame_inference"
             self.runtime.logger.info("Upload analysis job=%s stage=%s", job_id, current_stage)
             self.update_job_record(job_id, status_detail="模型已加载，正在抽帧分析视频内容。")
+            consecutive_frame_failures = 0
+            total_frame_failures = 0
+            try:
+                max_frame_failures = max(
+                    1,
+                    int(os.getenv("MAX_FRAME_INFERENCE_FAILURES", "5") or 5),
+                )
+            except (TypeError, ValueError):
+                max_frame_failures = 5
 
             while True:
                 if self.is_job_deleted(job_id):
@@ -480,24 +489,63 @@ class UploadAnalysisApplicationService:
                     continue
 
                 timestamp = analysis_base_timestamp + (frame_index / fps)
-                results = predict_with_preferred_device(
-                    model,
-                    frame,
-                    logger=self.runtime.logger,
-                    conf=0.35,
-                    iou=0.45,
-                    imgsz=self.yolo_imgsz(),
-                    verbose=False,
-                )
-                plotted = results[0].plot()
-                focus_snapshot = self.analyze_uploaded_results(
-                    results,
-                    timestamp,
-                    plotted,
-                    upload_analyzer,
-                    user_id,
-                    job_id,
-                )
+                try:
+                    results = predict_with_preferred_device(
+                        model,
+                        frame,
+                        logger=self.runtime.logger,
+                        conf=0.35,
+                        iou=0.45,
+                        imgsz=self.yolo_imgsz(),
+                        verbose=False,
+                    )
+                    plotted = results[0].plot()
+                    focus_snapshot = self.analyze_uploaded_results(
+                        results,
+                        timestamp,
+                        plotted,
+                        upload_analyzer,
+                        user_id,
+                        job_id,
+                    )
+                    consecutive_frame_failures = 0
+                except Exception as exc:
+                    total_frame_failures += 1
+                    consecutive_frame_failures += 1
+                    self.runtime.logger.warning(
+                        "Upload analysis job=%s frame=%s inference failed "
+                        "consecutive=%s total=%s: %s",
+                        job_id,
+                        frame_index,
+                        consecutive_frame_failures,
+                        total_frame_failures,
+                        exc,
+                        exc_info=True,
+                    )
+                    self.update_job_record(
+                        job_id,
+                        status="processing",
+                        processed_frames=frame_index,
+                        total_frames=total_frames,
+                        progress=(
+                            min(100.0, round((frame_index / total_frames) * 100, 1))
+                            if total_frames > 0
+                            else 0.0
+                        ),
+                        status_detail=(
+                            "部分视频帧分析失败，系统正在跳过异常帧并继续处理。"
+                            "连续失败 {}/{} 帧。"
+                        ).format(consecutive_frame_failures, max_frame_failures),
+                    )
+                    if consecutive_frame_failures >= max_frame_failures:
+                        raise UploadAnalysisValidationError(
+                            "连续 {} 个抽样帧分析失败，最后错误：{}".format(
+                                consecutive_frame_failures,
+                                exc,
+                            ),
+                            error_code="frame_inference_failed",
+                        )
+                    continue
 
                 processed_frames = frame_index
                 progress = 0.0

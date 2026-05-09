@@ -61,6 +61,17 @@ class _FakeModel:
         return [_FakeResult()]
 
 
+class _FlakyModel:
+    def __init__(self):
+        self.calls = 0
+
+    def predict(self, _frame, conf, iou, imgsz, verbose=False):
+        self.calls += 1
+        if self.calls == 1:
+            raise RuntimeError("temporary frame failure")
+        return [_FakeResult()]
+
+
 class ProgressThrottlingTests(unittest.TestCase):
     def test_progress_updates_are_throttled(self):
         temp_dir = tempfile.mkdtemp(prefix="classroom_progress_")
@@ -182,6 +193,98 @@ class ProgressThrottlingTests(unittest.TestCase):
 
         self.assertGreater(len(progress_updates), 50)
         self.assertLess(len(progress_updates), 200)
+
+    def test_video_analysis_skips_transient_frame_inference_failure(self):
+        temp_dir = tempfile.mkdtemp(prefix="classroom_frame_failure_")
+        self.addCleanup(shutil.rmtree, temp_dir, True)
+
+        file_path = os.path.join(temp_dir, "video.mp4")
+        with open(file_path, "wb") as handle:
+            handle.write(b"x")
+
+        repositories = AnalysisRepositories(
+            query_jobs_for_user=lambda *args, **kwargs: None,
+            get_latest_job_for_user=lambda *args, **kwargs: None,
+            get_visible_job=lambda *args, **kwargs: None,
+            get_job_by_id=lambda *args, **kwargs: None,
+            create_upload_job_record=lambda *args, **kwargs: None,
+            delete_job_artifacts=lambda *args, **kwargs: None,
+            get_or_create_report=lambda *args, **kwargs: None,
+            get_report_for_job_and_user=lambda *args, **kwargs: None,
+            get_latest_reportable_job_for_user=lambda *args, **kwargs: None,
+            count_jobs_for_user_by_status=lambda *args, **kwargs: 0,
+            count_completed_reports_for_user=lambda *args, **kwargs: 0,
+        )
+        report_builders = AnalysisReportBuilders(
+            build_behavior_report_rows=lambda *args, **kwargs: [],
+            build_report_insights=lambda *args, **kwargs: [],
+            build_risk_assessment=lambda *args, **kwargs: {"risk_level": "", "risk_summary": ""},
+            build_teacher_suggestions=lambda *args, **kwargs: [],
+            build_report_gallery=lambda *args, **kwargs: [],
+            build_rule_snapshot_for_report=lambda *args, **kwargs: {},
+            build_analysis_metrics=lambda *args, **kwargs: {},
+            serialize_job=lambda *args, **kwargs: {},
+            job_status_message=lambda *args, **kwargs: "",
+        )
+
+        fake_capture = _FakeCapture(total_frames=3, fps=25.0)
+        fake_cv2 = _FakeCV2(fake_capture)
+        fake_model = _FlakyModel()
+
+        class _FakeStorage:
+            def list_events(self, *args, **kwargs):
+                return []
+
+            def build_history_summary(self, *args, **kwargs):
+                return {}
+
+        runtime = AnalysisRuntimeContext(
+            behavior_display_names={"sleep": "Sleep"},
+            session_factory=object(),
+            session_scope=lambda *args, **kwargs: None,
+            load_behavior_rules=lambda *args, **kwargs: {},
+            event_storage=_FakeStorage(),
+            get_model=lambda: fake_model,
+            normalize_detections=lambda *args, **kwargs: [],
+            map_detections_to_behaviors=lambda *args, **kwargs: {},
+            save_alert_snapshot=lambda *args, **kwargs: None,
+            calculate_focus_score=lambda *args, **kwargs: {},
+            user_can_access_camera=lambda *args, **kwargs: False,
+            json_dumps=lambda *args, **kwargs: "{}",
+            json_loads=lambda *args, **kwargs: {},
+            format_timestamp=lambda *args, **kwargs: "",
+            format_datetime=lambda *args, **kwargs: "",
+            upload_dir=temp_dir,
+            allowed_image_extensions={".png"},
+            allowed_video_extensions={".mp4"},
+            logger=logging.getLogger("test_frame_failure"),
+            cv2=fake_cv2,
+            stats_lock=object(),
+            current_stats={},
+            source_lock=object(),
+            source_state={},
+            get_behavior_rule_config_payload=lambda *args, **kwargs: {},
+            get_runtime_setting=lambda key: 1 if key == "video_analysis_frame_stride" else 416,
+        )
+
+        service = UploadAnalysisApplicationService(
+            runtime=runtime,
+            repositories=repositories,
+            report_builders=report_builders,
+            temporal_analyzer_factory=lambda *_args, **_kwargs: object(),
+        )
+        service.is_job_deleted = lambda _job_id: False
+        service.purge_job_artifacts = lambda *_args, **_kwargs: None
+        service.save_report_record = lambda *_args, **_kwargs: True
+        service.analyze_uploaded_results = lambda *_args, **_kwargs: {}
+
+        calls = []
+        service.update_job_record = lambda _job_id, **fields: calls.append(fields) or True
+
+        service.process_uploaded_video("job-flaky", 1, file_path)
+
+        self.assertTrue(any("跳过异常帧" in fields.get("status_detail", "") for fields in calls))
+        self.assertTrue(any(fields.get("status") == "completed" for fields in calls))
 
 
 if __name__ == "__main__":

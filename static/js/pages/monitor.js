@@ -124,10 +124,12 @@
     }
 
     setText("statLowHead", data.low_head || 0);
+    setText("statPhone", data.phone || 0);
     setText("statSleep", data.sleep || 0);
     setText("statHandRaise", data.hand_raise || 0);
     setText("statTurnTalk", data.turn_talk || 0);
     setText("durationLowHead", F.formatSeconds(data.durations && data.durations.low_head));
+    setText("durationPhone", F.formatSeconds(data.durations && data.durations.phone));
     setText("durationSleep", F.formatSeconds(data.durations && data.durations.sleep));
     setText("durationHandRaise", F.formatSeconds(data.durations && data.durations.hand_raise));
     setText("durationTurnTalk", F.formatSeconds(data.durations && data.durations.turn_talk));

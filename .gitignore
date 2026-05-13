@@ -20,6 +20,15 @@ result.jpg
 ~$*.docx
 *.log
 
+# Thesis/package generated artifacts
+_docx_*/
+school_template_render/
+thesis_*_render/
+submission_code_drawings_*/
+论文附件_最终材料_待放文献/
+论文附件_最终材料_待放文献.zip
+论文附件_图纸与代码_9MB内.zip
+
 # Runtime artifacts / uploads / snapshots / queues
 data/uploads/
 data/alerts/

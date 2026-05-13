@@ -12,6 +12,7 @@ from ultralytics import YOLO
 
 from app_config import build_runtime_summary, load_runtime_config, mask_database_url
 from app_core.context import create_app_context
+from app_core.detection_models import RoboflowHostedModel
 from app_core.inference_runtime import inference_device_label
 from app_core.registry import build_service_registry
 from database import AlertEvent, AnalysisReport, SystemConfig, User, VideoAnalysisJob, build_database_url, session_scope
@@ -123,6 +124,22 @@ def _build_initial_camera_status():
 
 
 def _build_initial_model_state():
+    if RUNTIME_CONFIG.inference_provider == "roboflow":
+        model_ready = RUNTIME_CONFIG.roboflow_api_key_present
+        return {
+            "status": "ready" if model_ready else "warning",
+            "loaded": False,
+            "message": (
+                "Roboflow hosted classroom model is configured."
+                if model_ready
+                else "Roboflow provider selected but ROBOFLOW_API_KEY is missing."
+            ),
+            "path": RUNTIME_CONFIG.roboflow_model_id,
+            "provider": RUNTIME_CONFIG.inference_provider,
+            "device": "hosted",
+            "last_error": None,
+        }
+
     model_exists = os.path.exists(RUNTIME_CONFIG.model_path)
     return {
         "status": "ready" if model_exists else "warning",
@@ -133,6 +150,7 @@ def _build_initial_model_state():
             else "未检测到模型文件，相关接口会返回明确错误。"
         ),
         "path": RUNTIME_CONFIG.model_path,
+        "provider": RUNTIME_CONFIG.inference_provider,
         "device": inference_device_label(),
         "last_error": None,
     }
@@ -175,6 +193,7 @@ def _format_timestamp(value: Optional[float]) -> str:
 def calculate_focus_score(stable_counts: dict) -> dict:
     penalties = (
         stable_counts.get("low_head", 0) * 12
+        + stable_counts.get("phone", 0) * 18
         + stable_counts.get("sleep", 0) * 20
         + stable_counts.get("turn_talk", 0) * 15
     )
@@ -210,7 +229,10 @@ def get_model():
         if APP_CONTEXT.model is not None:
             return APP_CONTEXT.model
 
-        if not os.path.exists(RUNTIME_CONFIG.model_path):
+        if (
+            RUNTIME_CONFIG.inference_provider != "roboflow"
+            and not os.path.exists(RUNTIME_CONFIG.model_path)
+        ):
             with APP_CONTEXT.runtime_lock:
                 APP_CONTEXT.runtime_refs["model_state"].update(
                     {
@@ -227,13 +249,21 @@ def get_model():
             )
 
         try:
-            APP_CONTEXT.model = YOLO(RUNTIME_CONFIG.model_path, task="detect")
+            if RUNTIME_CONFIG.inference_provider == "roboflow":
+                APP_CONTEXT.model = RoboflowHostedModel.from_env()
+            else:
+                APP_CONTEXT.model = YOLO(RUNTIME_CONFIG.model_path, task="detect")
             with APP_CONTEXT.runtime_lock:
                 APP_CONTEXT.runtime_refs["model_state"].update(
                     {
                         "status": "ok",
                         "loaded": True,
-                        "device": inference_device_label(),
+                        "provider": RUNTIME_CONFIG.inference_provider,
+                        "device": (
+                            "hosted"
+                            if RUNTIME_CONFIG.inference_provider == "roboflow"
+                            else inference_device_label()
+                        ),
                         "message": "模型已加载，可用于实时监测与视频分析。",
                         "last_error": None,
                     }

@@ -23,7 +23,7 @@
   }
 
   function totalStableCount(data) {
-    return (data.low_head || 0) + (data.sleep || 0) + (data.hand_raise || 0) + (data.turn_talk || 0);
+    return (data.low_head || 0) + (data.phone || 0) + (data.sleep || 0) + (data.hand_raise || 0) + (data.turn_talk || 0);
   }
 
   window.ClassroomFormatters = {

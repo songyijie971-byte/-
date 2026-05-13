@@ -4,6 +4,7 @@ from typing import Mapping
 def calculate_focus_score(stable_counts: Mapping[str, int]) -> dict:
     penalties = (
         stable_counts.get("low_head", 0) * 12
+        + stable_counts.get("phone", 0) * 18
         + stable_counts.get("sleep", 0) * 20
         + stable_counts.get("turn_talk", 0) * 15
     )

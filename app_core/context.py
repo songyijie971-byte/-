@@ -115,6 +115,7 @@ def create_app_context(
             "inference_min_interval_seconds": runtime_config.inference_min_interval_seconds,
             "video_analysis_frame_stride": runtime_config.video_analysis_frame_stride,
             "max_upload_size_mb": round(runtime_config.max_upload_bytes / 1024 / 1024),
+            "yolo_confidence": runtime_config.yolo_confidence,
         },
         "camera_status": initial_camera_status_factory(),
         "model_state": initial_model_state_factory(),

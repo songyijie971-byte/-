@@ -312,13 +312,22 @@ def register_analysis_routes(app, deps):
                 source_relative_path=relative_source_path,
                 source_size_bytes=size_bytes,
             )
-        except Exception:
+        except Exception as exc:
+            LOGGER.exception("Image analysis failed")
             safe_delete_file(
                 file_path,
                 allowed_base_dir=os.path.abspath(UPLOAD_DIR),
                 logger=LOGGER,
             )
-            raise
+            return (
+                jsonify(
+                    {
+                        "ok": False,
+                        "message": "图片分析失败：{}".format(str(exc)[:300]),
+                    }
+                ),
+                500,
+            )
 
         _store_image_analysis(g.current_user["id"], payload)
         return jsonify(dict(payload, ok=True, available=True))

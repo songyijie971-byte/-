@@ -51,6 +51,9 @@ def build_camera_services(deps):
     def yolo_imgsz():
         return max(64, int(get_runtime_setting("yolo_imgsz") or 416))
 
+    def yolo_confidence():
+        return max(0.01, float(get_runtime_setting("yolo_confidence") or 0.35))
+
     def stream_fps():
         return max(1.0, float(get_runtime_setting("stream_fps") or 12.0))
 
@@ -300,8 +303,9 @@ def build_camera_services(deps):
                 2,
             )
 
-        summary_text = "LowHead:{}  Sleep:{}  Hand:{}  Talk:{}".format(
+        summary_text = "LowHead:{}  Phone:{}  Sleep:{}  Hand:{}  Talk:{}".format(
             stable_counts.get("low_head", 0),
+            stable_counts.get("phone", 0),
             stable_counts.get("sleep", 0),
             stable_counts.get("hand_raise", 0),
             stable_counts.get("turn_talk", 0),
@@ -478,7 +482,7 @@ def build_camera_services(deps):
                         model,
                         frame,
                         logger=LOGGER,
-                        conf=0.35,
+                        conf=yolo_confidence(),
                         iou=0.45,
                         imgsz=yolo_imgsz(),
                         verbose=False,

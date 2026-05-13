@@ -94,6 +94,7 @@ def build_service_registry(app, context, helpers):
         "VIDEO_ANALYSIS_FRAME_STRIDE": runtime_config.video_analysis_frame_stride,
         "VideoAnalysisJob": VideoAnalysisJob,
         "YOLO_IMGSZ": runtime_config.yolo_imgsz,
+        "YOLO_CONFIDENCE": runtime_config.yolo_confidence,
         "_format_dt": helpers["_format_dt"],
         "_format_timestamp": helpers["_format_timestamp"],
         "_json_dumps": helpers["_json_dumps"],

@@ -121,6 +121,8 @@ def build_report_services(deps):
         row_map = {row["behavior_key"]: row for row in behavior_rows}
         if "low_head" in row_map and row_map["low_head"]["count"] > 0:
             suggestions.append("针对低头行为，可在讲授 10-15 分钟后插入提问、点名或板书互动，提升注意力回流。")
+        if "phone" in row_map and row_map["phone"]["count"] > 0:
+            suggestions.append("若出现玩手机事件，建议结合课堂任务要求明确电子设备使用边界，并及时提醒相关学生回到学习任务。")
         if "sleep" in row_map and row_map["sleep"]["count"] > 0:
             suggestions.append("若出现睡觉事件，建议调整课堂节奏或加入短时互动任务，减少长时间单向讲授。")
         if "turn_talk" in row_map and row_map["turn_talk"]["count"] > 0:

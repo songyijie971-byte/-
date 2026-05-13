@@ -6,6 +6,7 @@ from typing import Callable, Dict, List, Optional
 
 BEHAVIOR_DISPLAY_NAMES = {
     "low_head": "Low Head",
+    "phone": "Phone",
     "hand_raise": "Hand Raise",
     "sleep": "Sleep",
     "turn_talk": "Turn Talk",
@@ -13,11 +14,8 @@ BEHAVIOR_DISPLAY_NAMES = {
 }
 
 
-# The repo does not include the original class-label file for best.onnx.
-# We therefore preserve the existing prototype's empirical class-id mapping:
-# 0/5 were previously counted as "phone" related behaviors, and are promoted
-# here to the more presentation-friendly "low_head" behavior.
-# 4/8/9 continue to map to hand raising, sleeping, and talking/turning.
+# Numeric ids are only a fallback for older local model outputs. Class names
+# take precedence below, which is important for Roboflow's dynamic labels.
 CLASS_BEHAVIOR_MAP = {
     0: "low_head",
     4: "hand_raise",
@@ -27,10 +25,59 @@ CLASS_BEHAVIOR_MAP = {
 }
 
 
+def _normalize_class_name(value: str) -> str:
+    return "".join(ch for ch in value.lower() if ch.isalnum())
+
+
+CLASS_NAME_BEHAVIOR_MAP = {
+    _normalize_class_name("UsingPhone"): "phone",
+    _normalize_class_name("using phone"): "phone",
+    _normalize_class_name("use phone"): "phone",
+    _normalize_class_name("Phone"): "phone",
+    _normalize_class_name("phone"): "phone",
+    _normalize_class_name("playing phone"): "phone",
+    _normalize_class_name("mobile phone"): "phone",
+    _normalize_class_name("mobile"): "phone",
+    _normalize_class_name("cell phone"): "phone",
+    _normalize_class_name("cellphone"): "phone",
+    _normalize_class_name("smartphone"): "phone",
+    _normalize_class_name("Bend"): "low_head",
+    _normalize_class_name("BowHead"): "low_head",
+    _normalize_class_name("bow head"): "low_head",
+    _normalize_class_name("Reading"): "low_head",
+    _normalize_class_name("Writing"): "low_head",
+    _normalize_class_name("HandRaise"): "hand_raise",
+    _normalize_class_name("hand_raise"): "hand_raise",
+    _normalize_class_name("hand-raise"): "hand_raise",
+    _normalize_class_name("raise-hand"): "hand_raise",
+    _normalize_class_name("RaiseHand"): "hand_raise",
+    _normalize_class_name("raising-hand"): "hand_raise",
+    _normalize_class_name("hand raising"): "hand_raise",
+    _normalize_class_name("HandRaising"): "hand_raise",
+    _normalize_class_name("hand-raising"): "hand_raise",
+    _normalize_class_name("raise hand"): "hand_raise",
+    _normalize_class_name("raising hand"): "hand_raise",
+    _normalize_class_name("hand raise"): "hand_raise",
+    _normalize_class_name("Sleep"): "sleep",
+    _normalize_class_name("sleeping"): "sleep",
+    _normalize_class_name("TurnHead"): "turn_talk",
+    _normalize_class_name("turn head"): "turn_talk",
+    _normalize_class_name("turn talk"): "turn_talk",
+    _normalize_class_name("talking"): "turn_talk",
+    _normalize_class_name("RaiseHead"): "head_up",
+    _normalize_class_name("Upright"): "head_up",
+}
+
+
 DEFAULT_BEHAVIOR_RULES = {
     "low_head": {
         "min_consecutive_frames": 4,
         "alert_after_seconds": 2.5,
+        "alert_enabled": True,
+    },
+    "phone": {
+        "min_consecutive_frames": 3,
+        "alert_after_seconds": 2.0,
         "alert_enabled": True,
     },
     "hand_raise": {
@@ -114,7 +161,11 @@ def map_detections_to_behaviors(
 ) -> Dict[str, FrameBehavior]:
     grouped: Dict[str, List[Detection]] = {}
     for detection in detections:
-        behavior_key = CLASS_BEHAVIOR_MAP.get(detection.class_id)
+        behavior_key = CLASS_NAME_BEHAVIOR_MAP.get(
+            _normalize_class_name(detection.class_name)
+        )
+        if behavior_key is None:
+            behavior_key = CLASS_BEHAVIOR_MAP.get(detection.class_id)
         if behavior_key is None:
             continue
         grouped.setdefault(behavior_key, []).append(detection)

@@ -82,6 +82,7 @@ def build_config_services(deps):
     def behavior_rule_descriptions():
         return {
             "low_head": "连续多帧检测到低头姿态后，判定为注意力下降事件。",
+            "phone": "检测到使用手机或手机目标时，单独统计并默认计入风险提醒。",
             "sleep": "连续多帧检测到睡觉状态后，触发重点告警。",
             "hand_raise": "用于体现课堂互动积极性，默认不计入风险告警。",
             "turn_talk": "持续出现转头交谈行为时，提示课堂干扰风险。",

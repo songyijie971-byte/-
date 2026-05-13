@@ -53,7 +53,14 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: mysql+pymysql://${MYSQL_APP_USER:-classroom_user}:${MYSQL_APP_PASSWORD:?set MYSQL_APP_PASSWORD in .env}@mysql:3306/${MYSQL_DATABASE:-classroom_demo}?charset=utf8mb4
+      INFERENCE_PROVIDER: ${INFERENCE_PROVIDER:-local}
       YOLO_MODEL_PATH: /app/data/model/best.onnx
+      YOLO_CONFIDENCE: ${YOLO_CONFIDENCE:-0.20}
+      ROBOFLOW_API_KEY: ${ROBOFLOW_API_KEY:-}
+      ROBOFLOW_MODEL_ID: ${ROBOFLOW_MODEL_ID:-new-student-classroom-activity-3-hand-raise-phone-sleep-2-x63gb-6j0xy/6}
+      ROBOFLOW_CONFIDENCE: ${ROBOFLOW_CONFIDENCE:-0.15}
+      ROBOFLOW_OVERLAP: ${ROBOFLOW_OVERLAP:-0.45}
+      ROBOFLOW_TIMEOUT_SECONDS: ${ROBOFLOW_TIMEOUT_SECONDS:-20}
       UPLOAD_DIR: /app/data/uploads
       JOB_QUEUE_DIR: /app/data/job_queue
       FLASK_ENV: production

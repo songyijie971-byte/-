@@ -56,7 +56,11 @@ def _read_float(name: str, default: float, minimum: float = 0.0) -> float:
 @dataclass(frozen=True)
 class RuntimeConfig:
     database_url: str
+    inference_provider: str
     model_path: str
+    roboflow_model_id: str
+    roboflow_api_key_present: bool
+    yolo_confidence: float
     yolo_imgsz: int
     inference_every_n_frames: int
     inference_min_interval_seconds: float
@@ -99,6 +103,19 @@ def mask_database_url(database_url: str) -> str:
 
 def load_runtime_config() -> RuntimeConfig:
     model_path = os.getenv("YOLO_MODEL_PATH", "best.onnx")
+    roboflow_model_id = os.getenv(
+        "ROBOFLOW_MODEL_ID",
+        "new-student-classroom-activity-3-hand-raise-phone-sleep-2-x63gb-6j0xy/6",
+    )
+    roboflow_api_key_present = bool(os.getenv("ROBOFLOW_API_KEY", "").strip())
+    inference_provider = (
+        os.getenv("INFERENCE_PROVIDER")
+        or os.getenv("MODEL_PROVIDER")
+        or ("roboflow" if roboflow_api_key_present else "local")
+    ).strip().lower()
+    if inference_provider not in {"local", "roboflow"}:
+        inference_provider = "local"
+
     upload_dir = os.getenv("UPLOAD_DIR", "data/uploads")
     camera_backend = os.getenv("CAMERA_BACKEND", "auto").lower()
     if camera_backend not in SUPPORTED_CAMERA_BACKENDS:
@@ -146,9 +163,29 @@ def load_runtime_config() -> RuntimeConfig:
         },
     }
 
+    if inference_provider == "roboflow":
+        startup_checks["model"].update(
+            {
+                "status": "ok" if roboflow_api_key_present else "warning",
+                "message": (
+                    "Roboflow hosted model is configured."
+                    if roboflow_api_key_present
+                    else "Roboflow provider selected but ROBOFLOW_API_KEY is missing."
+                ),
+                "provider": inference_provider,
+                "path": roboflow_model_id,
+            }
+        )
+    else:
+        startup_checks["model"]["provider"] = inference_provider
+
     return RuntimeConfig(
         database_url=build_database_url(),
+        inference_provider=inference_provider,
         model_path=model_path,
+        roboflow_model_id=roboflow_model_id,
+        roboflow_api_key_present=roboflow_api_key_present,
+        yolo_confidence=_read_float("YOLO_CONFIDENCE", 0.35, minimum=0.01),
         yolo_imgsz=_read_int("YOLO_IMGSZ", 416, minimum=64),
         inference_every_n_frames=_read_int("INFERENCE_EVERY_N_FRAMES", 2, minimum=1),
         inference_min_interval_seconds=_read_float(
@@ -184,8 +221,12 @@ def load_runtime_config() -> RuntimeConfig:
 def build_runtime_summary(config: RuntimeConfig) -> Dict[str, object]:
     return {
         "database_url": mask_database_url(config.database_url),
+        "inference_provider": config.inference_provider,
         "model_path": config.model_path,
         "model_exists": os.path.exists(config.model_path),
+        "roboflow_model_id": config.roboflow_model_id,
+        "roboflow_api_key_present": config.roboflow_api_key_present,
+        "yolo_confidence": config.yolo_confidence,
         "camera_index": config.camera_index,
         "camera_backend": config.camera_backend,
         "camera_resolution": "{}x{}".format(config.camera_width, config.camera_height),

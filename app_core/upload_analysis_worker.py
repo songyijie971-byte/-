@@ -12,6 +12,7 @@ from ultralytics import YOLO
 from analysis_service import create_upload_analysis_service
 from app_config import build_runtime_summary, load_runtime_config
 from app_core.context import create_app_context
+from app_core.detection_models import RoboflowHostedModel
 from app_core.inference_runtime import inference_device_label
 from app_core.job_executor import UploadAnalysisTask
 from app_core.repositories import build_repository_helpers
@@ -82,12 +83,29 @@ def _build_initial_camera_status():
 
 def _build_initial_model_state():
     runtime_config = load_runtime_config()
+    if runtime_config.inference_provider == "roboflow":
+        model_ready = runtime_config.roboflow_api_key_present
+        return {
+            "status": "ready" if model_ready else "warning",
+            "loaded": False,
+            "message": (
+                "Roboflow hosted classroom model is configured."
+                if model_ready
+                else "Roboflow provider selected but ROBOFLOW_API_KEY is missing."
+            ),
+            "path": runtime_config.roboflow_model_id,
+            "provider": runtime_config.inference_provider,
+            "device": "hosted",
+            "last_error": None,
+        }
+
     model_exists = os.path.exists(runtime_config.model_path)
     return {
         "status": "ready" if model_exists else "warning",
         "loaded": False,
         "message": "Model file detected." if model_exists else "Model file is missing.",
         "path": runtime_config.model_path,
+        "provider": runtime_config.inference_provider,
         "device": inference_device_label(),
         "last_error": None,
     }
@@ -112,7 +130,10 @@ def _build_worker_service():
         with app_context.model_lock:
             if app_context.model is not None:
                 return app_context.model
-            app_context.model = YOLO(runtime_config.model_path, task="detect")
+            if runtime_config.inference_provider == "roboflow":
+                app_context.model = RoboflowHostedModel.from_env()
+            else:
+                app_context.model = YOLO(runtime_config.model_path, task="detect")
             return app_context.model
 
     def save_alert_snapshot(frame, alert_payload, user_id=None, job_id=None):
@@ -181,6 +202,7 @@ def _build_worker_service():
         "VIDEO_ANALYSIS_FRAME_STRIDE": runtime_config.video_analysis_frame_stride,
         "VideoAnalysisJob": VideoAnalysisJob,
         "YOLO_IMGSZ": runtime_config.yolo_imgsz,
+        "YOLO_CONFIDENCE": runtime_config.yolo_confidence,
         "_format_dt": _format_dt,
         "_format_timestamp": _format_timestamp,
         "_json_dumps": _json_dumps,

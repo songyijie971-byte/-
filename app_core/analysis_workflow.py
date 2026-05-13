@@ -91,6 +91,9 @@ class UploadAnalysisApplicationService:
     def yolo_imgsz(self) -> int:
         return max(64, int(self.runtime.get_runtime_setting("yolo_imgsz") or 416))
 
+    def yolo_confidence(self) -> float:
+        return max(0.01, float(self.runtime.get_runtime_setting("yolo_confidence") or 0.35))
+
     def empty_analysis_status(self, user) -> Dict[str, object]:
         return {
             "status": "idle",
@@ -273,7 +276,7 @@ class UploadAnalysisApplicationService:
             model,
             frame,
             logger=self.runtime.logger,
-            conf=0.35,
+            conf=self.yolo_confidence(),
             iou=0.45,
             imgsz=self.yolo_imgsz(),
             verbose=False,
@@ -494,7 +497,7 @@ class UploadAnalysisApplicationService:
                         model,
                         frame,
                         logger=self.runtime.logger,
-                        conf=0.35,
+                        conf=self.yolo_confidence(),
                         iou=0.45,
                         imgsz=self.yolo_imgsz(),
                         verbose=False,
@@ -790,6 +793,7 @@ class UploadAnalysisApplicationService:
             durations = dict(self.runtime.current_stats["durations"])
             return {
                 "low_head": stable_counts.get("low_head", 0),
+                "phone": stable_counts.get("phone", 0),
                 "sleep": stable_counts.get("sleep", 0),
                 "hand_raise": stable_counts.get("hand_raise", 0),
                 "turn_talk": stable_counts.get("turn_talk", 0),

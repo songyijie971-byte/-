@@ -108,7 +108,7 @@
     setText("focusLimitText", focus.limits_text || "--");
     setText("lastUpdated", "最近更新 " + F.formatTime(data.last_updated));
     setText("cameraStatusText", cameraStatus.message || "系统将持续检测摄像头状态，并在异常时给出提醒。");
-    setText("focusLiveBadge", level === "良好" ? "专注状态稳定" : "需要继续关注");
+    setText("focusLiveBadge", level === "高" ? "专注状态稳定" : "需要继续关注");
     setText("alertCountBadge", "告警数 " + alertCount);
 
     const levelEl = document.getElementById("focusLevel");

@@ -2,24 +2,76 @@
 
 {% block title %}系统总览{% endblock %}
 {% block page_title %}系统总览{% endblock %}
-{% block page_subtitle %}从这里进入实时监测、离线分析与课堂报告，快速掌握整套流程{% endblock %}
+{% block page_subtitle %}智慧课堂行为识别与分析平台{% endblock %}
 
 {% block page_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/dashboard.css') }}">
 {% endblock %}
 
 {% block content %}
-<section class="dashboard-stage glass-card">
-  <div class="dashboard-stage-copy">
-    <h3 class="dashboard-stage-title">
-      <span class="dashboard-stage-title-main">智慧课堂行为分析平台</span>
-      <span class="dashboard-stage-title-sub">控制中心</span>
-    </h3>
-    <p class="dashboard-stage-text">选择你要进入的工作模块。实时监测适合课堂现场查看，视频分析适合课后复盘，报告页用于集中展示分析结论。</p>
-    <div class="dashboard-hero-actions">
-      <a class="btn primary" href="/monitor">进入实时监测</a>
-      <a class="btn ghost" href="/analysis-view">上传视频分析</a>
-      <a class="btn ghost" href="/report/latest" target="_blank">打开最新报告</a>
+<section class="dashboard-welcome glass-card">
+  <div class="dashboard-welcome-copy">
+    <h2 class="dashboard-welcome-title">欢迎使用智慧课堂行为分析平台</h2>
+    <p class="dashboard-welcome-text">基于 YOLO 模型的课堂行为识别系统，支持实时监测与离线视频分析，自动生成风险报告与教学建议。</p>
+  </div>
+</section>
+
+<div class="dashboard-grid">
+  <a class="dashboard-feature-card glass-card" href="/analysis-view">
+    <div class="dashboard-feature-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <h3 class="dashboard-feature-title">视频分析</h3>
+    <p class="dashboard-feature-desc">上传课堂视频，自动检测低头、玩手机、睡觉等行为，生成分析报告</p>
+    <span class="dashboard-feature-action">开始分析 &rarr;</span>
+  </a>
+
+  <a class="dashboard-feature-card glass-card" href="/monitor">
+    <div class="dashboard-feature-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    </div>
+    <h3 class="dashboard-feature-title">实时监测</h3>
+    <p class="dashboard-feature-desc">连接摄像头实时检测学生行为，专注度评分实时更新</p>
+    <span class="dashboard-feature-action">进入监测 &rarr;</span>
+  </a>
+
+  <a class="dashboard-feature-card glass-card" href="/history-view">
+    <div class="dashboard-feature-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h3 class="dashboard-feature-title">历史记录</h3>
+    <p class="dashboard-feature-desc">查看历史分析记录，追踪行为趋势变化</p>
+    <span class="dashboard-feature-action">查看历史 &rarr;</span>
+  </a>
+
+  <a class="dashboard-feature-card glass-card" href="/evaluation">
+    <div class="dashboard-feature-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    </div>
+    <h3 class="dashboard-feature-title">实验评估</h3>
+    <p class="dashboard-feature-desc">查看识别效果指标、参数对比与性能数据</p>
+    <span class="dashboard-feature-action">查看评估 &rarr;</span>
+  </a>
+</div>
+
+<section class="dashboard-info glass-card">
+  <h3 class="dashboard-info-title">系统特性</h3>
+  <div class="dashboard-info-grid">
+    <div class="dashboard-info-item">
+      <span class="dashboard-info-label">行为检测</span>
+      <span class="dashboard-info-value">低头、玩手机、睡觉、举手、转头交谈</span>
+    </div>
+    <div class="dashboard-info-item">
+      <span class="dashboard-info-label">分析模式</span>
+      <span class="dashboard-info-value">实时监测 + 离线视频分析</span>
+    </div>
+    <div class="dashboard-info-item">
+      <span class="dashboard-info-label">报告输出</span>
+      <span class="dashboard-info-value">风险等级、教师建议、关键截图、规则快照</span>
+    </div>
+    <div class="dashboard-info-item">
+      <span class="dashboard-info-label">规则配置</span>
+      <span class="dashboard-info-value">管理员可在线调整行为判定参数</span>
     </div>
   </div>
 </section>
